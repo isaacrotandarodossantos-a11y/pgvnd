@@ -6,7 +6,7 @@ def gerar_link_pagamento(nome, email):
     sdk = mercadopago.SDK(token)
 
     # URL correta apontando para o seu servidor
-    url_sucesso = f"https://pgvnd.onrender.com/compracerta?nome={nome}&email={email}"
+    url_sucesso = f"https://bucolic-fox-ea9bba.netlify.app/"
 
     preference_data = {
         "items": [
