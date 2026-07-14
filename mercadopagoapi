@@ -1,12 +1,11 @@
 import mercadopago
 import os
 
-# Adicione (nome, email) aqui dentro dos parênteses
 def gerar_link_pagamento(nome, email):
     token = os.getenv("MP_TOKEN")
     sdk = mercadopago.SDK(token)
 
-    # Agora o nome e email estão disponíveis para uso aqui
+    # URL correta apontando para o seu servidor
     url_sucesso = f"https://pgvnd.onrender.com/compracerta?nome={nome}&email={email}"
 
     preference_data = {
@@ -19,7 +18,7 @@ def gerar_link_pagamento(nome, email):
             }
         ],
         "back_urls": {
-            "success": "https://bucolic-fox-ea9bba.netlify.app/",
+            "success": url_sucesso,
             "failure": "https://pgvnd.onrender.com/compraerrada",
             "pending": "https://pgvnd.onrender.com/compraerrada"
         },
