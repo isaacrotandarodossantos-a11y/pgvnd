@@ -146,21 +146,40 @@
 </div>
 
 <script>
-  document.getElementById("checkoutForm").addEventListener("submit", function(e) {
+    // Atualiza o resumo visual enquanto o cliente digita
+    const form = document.getElementById("checkoutForm");
+    form.addEventListener("change", () => {
+        const formData = new FormData(form);
+        document.getElementById("resumoModalidade").innerText = formData.get("modalidade") || "Corrida 5 KM";
+        document.getElementById("resumoCor").innerText = formData.get("cor") || "Roxa";
+        document.getElementById("resumoTamanho").innerText = formData.get("tamanho") || "M";
+    });
+
+    document.getElementById("checkoutForm").addEventListener("submit", function(e) {
         e.preventDefault();
+        
         const btn = document.getElementById("btnFinalizar");
         btn.disabled = true;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> GERANDO PAGAMENTO...';
 
-        fetch("gerar-link-pagamento", { 
-            method: "POST" 
+        // Captura os dados do formulário
+        const dadosForm = {
+            nome: document.querySelector('input[name="nome"]').value,
+            email: document.querySelector('input[name="email"]').value
+        };
+
+        // Envia para o seu servidor Flask
+        fetch("/gerar-link-pagamento", { 
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dadosForm)
         })
         .then(response => response.json())
         .then(data => {
             if (data.link) {
-                window.location.href = data.link; // AGORA VAI PARA O LINK DINÂMICO
+                window.location.href = data.link; 
             } else {
-                alert("Erro ao gerar link.");
+                alert("Erro ao gerar link. Tente novamente.");
                 btn.disabled = false;
                 btn.innerHTML = "FINALIZAR INSCRIÇÃO";
             }
