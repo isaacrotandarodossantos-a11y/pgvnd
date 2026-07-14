@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>Ecommerce Teste</h1>
+    <p>Camisa - R$259,99</p>
+    
+    {% if link_pagamento %}
+        <a href="{{ link_pagamento }}">Compre aqui</a>
+    {% else %}
+        <p style="color:red;">O link de pagamento não pôde ser gerado. Verifique o servidor.</p>
+    {% endif %}
+</body>
+</html>
