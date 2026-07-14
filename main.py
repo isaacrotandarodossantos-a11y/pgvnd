@@ -3,8 +3,9 @@ from flask import Flask, render_template, jsonify
 from flask_cors import CORS
 from apimercadopago import gerar_link_pagamento
 
-app = Flask(__name__)
-CORS(app) # Permite a comunicação do HTML com o Python
+# O template_folder='.' diz ao Flask para procurar os .html na mesma pasta do main.py
+app = Flask(__name__, template_folder='.')
+CORS(app) 
 
 @app.route("/")
 def homepage():
@@ -19,13 +20,12 @@ def api_gerar_link():
 
 @app.route("/compracerta")
 def compra_certa():
-    return "Compra aprovada com sucesso!"
+    return render_template("compracerta.html")
 
 @app.route("/compraerrada")
 def compra_errada():
-    return "Erro no pagamento ou cancelado."
+    return render_template("compraerrada.html")
 
 if __name__ == "__main__":
-    # Ajuste para rodar corretamente no Render
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
