@@ -1,12 +1,12 @@
 import mercadopago
 import os
 
+# Adicione (nome, email) aqui dentro dos parênteses
 def gerar_link_pagamento(nome, email):
-    # Usa o token configurado no Render
     token = os.getenv("MP_TOKEN")
     sdk = mercadopago.SDK(token)
 
-    # Criamos as URLs de retorno já com os dados do cliente na "mochila" da URL
+    # Agora o nome e email estão disponíveis para uso aqui
     url_sucesso = f"https://pgvnd.onrender.com/compracerta?nome={nome}&email={email}"
 
     preference_data = {
@@ -23,7 +23,7 @@ def gerar_link_pagamento(nome, email):
             "failure": "https://pgvnd.onrender.com/compraerrada",
             "pending": "https://pgvnd.onrender.com/compraerrada"
         },
-        "auto_return": "approved" # Força o retorno imediato após o pagamento
+        "auto_return": "approved"
     }
     
     result = sdk.preference().create(preference_data)
