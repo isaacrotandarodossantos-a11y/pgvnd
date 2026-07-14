@@ -1,8 +1,12 @@
 import mercadopago
+import os
 
-def gerar_link_pagamento():
-    # Token de produção (substitua pelo seu atual após gerar um novo)
-    sdk = mercadopago.SDK("TEST-8677986015174769-071410-62092e2af1b3457c19aa12ee873e701c-722783171")
+def gerar_link_pagamento(nome, email):
+    token = os.getenv("MP_TOKEN")
+    sdk = mercadopago.SDK(token)
+
+    # URL correta apontando para o seu servidor
+    url_sucesso = f"https://pgvnd.onrender.com/compracerta?nome={nome}&email={email}"
 
     preference_data = {
         "items": [
@@ -10,14 +14,15 @@ def gerar_link_pagamento():
                 "title": "Inscrição São Jorge Para Todos",
                 "quantity": 1,
                 "currency_id": "BRL",
-                "unit_price": 1.00
+                "unit_price": 79.90
             }
         ],
         "back_urls": {
-            "success": "http://127.0.0.1:5000/compracerta",
-            "failure": "http://127.0.0.1:5000/compraerrada",
-            "pending": "http://127.0.0.1:5000/compraerrada"
-        }
+            "success": url_sucesso,
+            "failure": "https://pgvnd.onrender.com/compraerrada",
+            "pending": "https://pgvnd.onrender.com/compraerrada"
+        },
+        "auto_return": "approved"
     }
     
     result = sdk.preference().create(preference_data)
