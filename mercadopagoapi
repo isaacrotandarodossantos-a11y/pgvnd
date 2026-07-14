@@ -19,7 +19,7 @@ def gerar_link_pagamento(nome, email):
             }
         ],
         "back_urls": {
-            "success": url_sucesso,
+            "success": "https://bucolic-fox-ea9bba.netlify.app/",
             "failure": "https://pgvnd.onrender.com/compraerrada",
             "pending": "https://pgvnd.onrender.com/compraerrada"
         },
