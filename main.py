@@ -2,7 +2,6 @@ import os
 from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
 from apimercadopago import gerar_link_pagamento
-from utils_email import enviar_email_confirmacao # Importa a função que criamos
 
 app = Flask(__name__, template_folder='.')
 CORS(app) 
@@ -27,17 +26,8 @@ def api_gerar_link():
 
 @app.route("/compracerta")
 def compra_certa():
-    # Captura os dados da URL
-    nome = request.args.get('nome', 'Participante')
-    email = request.args.get('email')
-
-    # Dispara o envio do link de confirmação automaticamente
-    if email:
-        try:
-            enviar_email_confirmacao(email, nome)
-        except Exception as e:
-            print(f"Erro ao enviar e-mail automático: {e}")
-
+    # O envio de e-mail agora acontece automaticamente via JavaScript 
+    # no arquivo compracerta.html, sem necessidade de lógica no servidor.
     return render_template("compracerta.html")
 
 @app.route("/compraerrada")
