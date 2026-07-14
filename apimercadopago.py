@@ -10,7 +10,7 @@ def gerar_link_pagamento():
                 "title": "Inscrição São Jorge Para Todos",
                 "quantity": 1,
                 "currency_id": "BRL",
-                "unit_price": 60.00
+                "unit_price": 1.00
             }
         ],
         "back_urls": {
