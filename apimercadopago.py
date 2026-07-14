@@ -2,7 +2,7 @@ import mercadopago
 
 def gerar_link_pagamento():
     # Token de produção (substitua pelo seu atual após gerar um novo)
-    sdk = mercadopago.SDK("APP_USR-6514550609577640-071410-7564a86a2d54dc3b44f20e9dc2ddfeff-3535803663")
+    sdk = mercadopago.SDK("APP_USR-5497208760597250-071410-9ee82cf0482902fc37f0a4be69736123-3535803663")
 
     preference_data = {
         "items": [
