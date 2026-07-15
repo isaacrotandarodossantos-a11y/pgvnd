@@ -10,20 +10,30 @@ def gerar_link_pagamento(nome):
                 "title": "Inscrição São Jorge Para Todos",
                 "quantity": 1,
                 "currency_id": "BRL",
-                "unit_price": 50.00  # AUMENTADO PARA R$ 10.00 (Valores < R$ 1.00 costumam travar)
+                "unit_price": 0.01
             }
         ],
         "payer": {
             "name": nome
         },
-        "back_urls": {
-            "success": "https://bucolic-fox-ea9bba.netlify.app/",
-            "failure": "https://pgvnd.onrender.com/compraerrada",
-            "pending": "https://pgvnd.onrender.com/compraerrada"
+        # Bloqueia outros meios e força a exibição direta do Pix
+        "payment_methods": {
+            "excluded_payment_types": [
+                {"id": "credit_card"},   # Bloqueia Cartão de Crédito
+                {"id": "debit_card"},    # Bloqueia Cartão de Débito
+                {"id": "ticket"}         # Bloqueia Boleto Bancário
+            ],
+            "installments": 1            # Sem parcelamentos
         },
-        "auto_return": "approved", # Tenta redirecionar automaticamente
-        "binary_mode": False,        # Força aprovação imediata (sem pendência)
-        "statement_descriptor": "INSCRICAO SJ" # Nome que aparece no extrato
+        "back_urls": {
+            # Direciona o cliente para a sua página de agradecimento no Netlify
+            "success": "https://netlify.app",
+            "failure": "https://onrender.com",
+            "pending": "https://onrender.com"
+        },
+        "auto_return": "approved",       # Redireciona o usuário sozinho sem precisar clicar
+        "binary_mode": True,             # Pix é aprovado ou recusado na hora (sem pendências)
+        "statement_descriptor": "INSCRICAO SJ"
     }
     
     try:
