@@ -36,23 +36,23 @@ def api_gerar_link():
 
 @app.route("/compracerta")
 def compra_certa():
-    # Captura o ID do pagamento que o Mercado Pago envia na URL
     payment_id = request.args.get("payment_id")
-    
     status_final = "pendente"
 
+    # Se o ID existir, vamos ao Mercado Pago validar
     if payment_id:
         try:
-            # Consulta a API para garantir que o pagamento foi aprovado
             payment_info = sdk.payment().get(payment_id)
-            if payment_info.get("response"):
+            if payment_info and "response" in payment_info:
                 status_real = payment_info["response"].get("status")
+                # Se aprovado, confirmamos o status
                 if status_real == "approved":
                     status_final = "confirmado"
+                else:
+                    status_final = status_real # Ex: rejected, pending
         except Exception as e:
             print(f"Erro ao consultar API: {e}")
     
-    # Passa o status para o seu HTML
     return render_template("compracerta.html", status=status_final)
 
 @app.route("/compraerrada")
