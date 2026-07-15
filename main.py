@@ -92,7 +92,7 @@ def api_gerar_link():
 
     # Criando a cobrança Pix via Checkout Transparente (Direct API)
     payment_data = {
-        "transaction_amount": 10.00, # Mantido R$ 10.00 para evitar travas de antifraude
+        "transaction_amount": 0.01, # Mantido R$ 10.00 para evitar travas de antifraude
         "description": "Inscrição São Jorge Para Todos",
         "payment_method_id": "pix",
         "payer": {
