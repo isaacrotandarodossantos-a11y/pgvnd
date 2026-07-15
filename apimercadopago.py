@@ -16,36 +16,32 @@ def gerar_link_pagamento(nome):
         "payer": {
             "name": nome
         },
-        # Bloqueia outros meios e força a exibição direta do Pix
+        # TRAVA PARA EXIBIR APENAS PIX
         "payment_methods": {
             "excluded_payment_types": [
-                {"id": "credit_card"},   # Bloqueia Cartão de Crédito
-                {"id": "debit_card"},    # Bloqueia Cartão de Débito
-                {"id": "ticket"}         # Bloqueia Boleto Bancário
+                {"id": "credit_card"},   
+                {"id": "debit_card"},    
+                {"id": "ticket"}         
             ],
-            "installments": 1            # Sem parcelamentos
+            "installments": 1            
         },
         "back_urls": {
-            # Direciona o cliente para a sua página de agradecimento no Netlify
+            # Manda direto para o seu agradecimento no Netlify
             "success": "https://netlify.app",
             "failure": "https://onrender.com",
             "pending": "https://onrender.com"
         },
-        "auto_return": "approved",       # Redireciona o usuário sozinho sem precisar clicar
-        "binary_mode": True,             # Pix é aprovado ou recusado na hora (sem pendências)
+        "auto_return": "approved",       # Redireciona o cliente sozinho
+        "binary_mode": True,             # Pix direto aprovado/recusado
         "statement_descriptor": "INSCRICAO SJ"
     }
     
     try:
         result = sdk.preference().create(preference_data)
         payment = result.get("response")
-        
         if payment and "init_point" in payment:
             return payment["init_point"]
-        else:
-            print(f"Erro na criação da preferência: {result}")
-            return None
-            
+        return None
     except Exception as e:
-        print(f"Erro crítico: {e}")
+        print(f"Erro crítico na preferência: {e}")
         return None
