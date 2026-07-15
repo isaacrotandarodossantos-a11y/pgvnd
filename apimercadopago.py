@@ -10,10 +10,9 @@ def gerar_link_pagamento(nome, email, cpf):
                 "title": "Inscrição São Jorge Para Todos",
                 "quantity": 1,
                 "currency_id": "BRL",
-                "unit_price": 60.00 # Certifique-se de usar o preço correto
+                "unit_price": 0.01
             }
         ],
-        # Identifica quem está pagando
         "payer": {
             "name": nome,
             "email": email
@@ -24,14 +23,21 @@ def gerar_link_pagamento(nome, email, cpf):
             "failure": "https://pgvnd.onrender.com/compraerrada",
             "pending": "https://pgvnd.onrender.com/compraerrada"
         },
-        "auto_return": "approved"
-        # Não adicionamos 'excluded_payment_types', logo, Pix, Crédito e Débito serão aceitos automaticamente.
+        "auto_return": "approved",
+        "binary_mode": True  # <--- Adicionado para agilizar o processamento e reduzir travamentos
     }
     
     try:
         result = sdk.preference().create(preference_data)
         payment = result.get("response")
-        return payment.get("init_point")
+        
+        # Log para debug, caso precise ver no terminal do Render
+        if payment and "init_point" in payment:
+            return payment["init_point"]
+        else:
+            print(f"Erro na resposta do Mercado Pago: {result}")
+            return None
+            
     except Exception as e:
         print(f"Erro ao gerar preferência: {e}")
         return None
