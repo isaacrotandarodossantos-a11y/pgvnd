@@ -1,11 +1,12 @@
 import mercadopago
 import os
 
-def gerar_link_pagamento(nome, email, cpf):
-    token = os.getenv("APP_USR-8677986015174769-071410-f913279c1c5f01176f80d34cac8c035b-722783171")
+def gerar_link_pagamento(nome, email):
+    token = os.getenv("MP_TOKEN")
     sdk = mercadopago.SDK(token)
 
-    url_sucesso = "https://bucolic-fox-ea9bba.netlify.app/"
+    # URL correta apontando para o seu servidor
+    url_sucesso = f"https://bucolic-fox-ea9bba.netlify.app/"
 
     preference_data = {
         "items": [
@@ -16,7 +17,6 @@ def gerar_link_pagamento(nome, email, cpf):
                 "unit_price": 00.01
             }
         ],
-        "external_reference": cpf, # <--- ESSENCIAL: Vincula o pagamento ao CPF
         "back_urls": {
             "success": url_sucesso,
             "failure": "https://pgvnd.onrender.com/compraerrada",
