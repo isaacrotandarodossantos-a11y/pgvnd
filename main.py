@@ -21,7 +21,7 @@ def gerar_link_pagamento_interno(nome):
                 "title": "Inscrição São Jorge Para Todos",
                 "quantity": 1,
                 "currency_id": "BRL",
-                "unit_price": 10.00  # Mantido R$ 10.00 para evitar que o Pix trave
+                "unit_price": 0.01  # Mantido R$ 10.00 para evitar que o Pix trave
             }
         ],
         "payer": {
