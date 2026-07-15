@@ -10,12 +10,16 @@ def gerar_link_pagamento(nome, email, cpf):
                 "title": "Inscrição São Jorge Para Todos",
                 "quantity": 1,
                 "currency_id": "BRL",
-                "unit_price": 0.01
+                "unit_price": 0.01  # Valor ajustado para evitar bloqueio de teste
             }
         ],
         "payer": {
             "name": nome,
-            "email": email
+            "email": email,
+            "identification": {
+                "type": "CPF",
+                "number": cpf  # O CPF é obrigatório para destravar o botão de pagamento
+            }
         },
         "external_reference": cpf, 
         "back_urls": {
@@ -24,14 +28,13 @@ def gerar_link_pagamento(nome, email, cpf):
             "pending": "https://pgvnd.onrender.com/compraerrada"
         },
         "auto_return": "approved",
-        "binary_mode": True  # <--- Adicionado para agilizar o processamento e reduzir travamentos
+        "binary_mode": True
     }
     
     try:
         result = sdk.preference().create(preference_data)
         payment = result.get("response")
         
-        # Log para debug, caso precise ver no terminal do Render
         if payment and "init_point" in payment:
             return payment["init_point"]
         else:
