@@ -10,7 +10,7 @@ def gerar_link_pagamento(nome, email, cpf):
                 "title": "Inscrição São Jorge Para Todos",
                 "quantity": 1,
                 "currency_id": "BRL",
-                "unit_price": 0.01  # Valor ajustado para evitar bloqueio de teste
+                "unit_price": 10.00  # Valor ajustado para evitar bloqueio de teste
             }
         ],
         "payer": {
