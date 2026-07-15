@@ -10,20 +10,20 @@ def gerar_link_pagamento(nome):
                 "title": "Inscrição São Jorge Para Todos",
                 "quantity": 1,
                 "currency_id": "BRL",
-                "unit_price": 0.01
+                "unit_price": 0.01  # AUMENTADO PARA R$ 10.00 (Valores < R$ 1.00 costumam travar)
             }
         ],
         "payer": {
             "name": nome
-            # Email e Identification removidos para simplificar
         },
         "back_urls": {
             "success": "https://bucolic-fox-ea9bba.netlify.app/",
             "failure": "https://pgvnd.onrender.com/compraerrada",
             "pending": "https://pgvnd.onrender.com/compraerrada"
         },
-        "auto_return": "approved",
-        "binary_mode": True
+        "auto_return": "approved", # Tenta redirecionar automaticamente
+        "binary_mode": True,        # Força aprovação imediata (sem pendência)
+        "statement_descriptor": "INSCRICAO SJ" # Nome que aparece no extrato
     }
     
     try:
