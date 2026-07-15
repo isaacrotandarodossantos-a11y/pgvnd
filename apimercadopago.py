@@ -22,7 +22,7 @@ def gerar_link_pagamento(nome):
             "pending": "https://pgvnd.onrender.com/compraerrada"
         },
         "auto_return": "approved", # Tenta redirecionar automaticamente
-        "binary_mode": True,        # Força aprovação imediata (sem pendência)
+        "binary_mode": False,        # Força aprovação imediata (sem pendência)
         "statement_descriptor": "INSCRICAO SJ" # Nome que aparece no extrato
     }
     
