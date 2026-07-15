@@ -58,15 +58,41 @@
         .info div { display:flex; gap:12px; align-items:center; font-size:15px; color:var(--muted); }
         .info i { color:var(--green); }
         @media(max-width:980px){ .checkout { grid-template-columns:1fr; } .summary { position:relative; top:0; } .grid-2 { grid-template-columns:1fr; } .radio-grid { grid-template-columns:1fr; } }
+		.summary-shirt {
+			width: 50%;
+			margin-bottom: 50px;
+			margin-left: auto;    /* Adicionado para centralizar */
+			margin-right: auto;   /* Adicionado para centralizar */
+			text-align: center;
+		}
+
+		.summary-shirt img {
+			max-width: 100%;
+			height: auto;
+			border-radius: 16px;
+			box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+		}
+		.logo-img {
+			width: 58px;       /* Mantém o tamanho original da circle */
+			height: 58px;      /* Mantém o tamanho original da circle */
+			border-radius: 50%; /* Deixa a imagem redonda */
+			object-fit: cover;  /* Garante que a imagem não fique esticada */
+			border: 2px solid var(--border);
+		}
     </style>
 </head>
 <body>
 <div class="container">
     <div class="topbar">
         <div class="logo">
-            <div class="logo-circle"><i class="fa-solid fa-person-running"></i></div>
-            <div><h1>São Jorge Para Todos</h1><p>Checkout Oficial da Inscrição</p></div>
-        </div>
+			<!-- Substituímos a div pelo img abaixo -->
+			<img src="https://github.com/isaacrotandarodossantos-a11y/initial/blob/main/LOGO1.png?raw=true" alt="Logo do Evento" class="logo-img">
+			
+			<div>
+				<h1>São Jorge Para Todos</h1>
+				<p>Checkout Oficial da Inscrição</p>
+			</div>
+	</div>
         <div class="secure"><i class="fa-solid fa-lock"></i> Pagamento Seguro</div>
     </div>
     <div class="progress"><div class="step"><span style="width:100%"></span></div><div class="step"><span style="width:100%"></span></div><div class="step"><span style="width:60%"></span></div></div>
@@ -89,20 +115,9 @@
                     </div>
                 </div>
                 <div class="section">
-                    <div class="section-title"><i class="fa-solid fa-medal"></i> Escolha sua Modalidade</div>
-                    <div class="radio-grid">
-                        <label class="radio-card"><input type="radio" name="modalidade" value="Corrida 5km" required><strong>🏃 Corrida 5 KM</strong><span>Percurso oficial de corrida com kit completo.</span></label>
-                        <label class="radio-card"><input type="radio" name="modalidade" value="Caminhada 3km"><strong>🚶 Caminhada 3 KM</strong><span>Caminhada recreativa aberta para todas as idades.</span></label>
-                    </div>
-                </div>
-                <div class="section">
                     <div class="section-title"><i class="fa-solid fa-shirt"></i> Escolha sua Camiseta</div>
                     <div class="form-group">
                         <label>Cor</label>
-                        <div class="color-grid">
-                            <label class="color-card roxa"><input type="radio" name="cor" value="Roxa" required></label>
-                            <label class="color-card verde"><input type="radio" name="cor" value="Verde Limão"></label>
-                        </div>
                     </div>
                     <div class="form-group">
                         <label>Tamanho da Camiseta</label>
@@ -126,35 +141,64 @@
                     <span style="color:#6B7280; line-height:1.7; font-size:14px;">Declaro que li e concordo com o regulamento do evento, autorizo o uso da minha imagem e confirmo que estou apto para participar da prova.</span>
                 </div>
             </div>
-            <div class="card summary">
-                <h2>Resumo do Pedido</h2>
-                <div class="summary-box"><span>Evento</span><strong>São Jorge Para Todos</strong></div>
-                <div class="summary-box"><span>Categoria</span><strong id="resumoModalidade">Corrida 5 KM</strong></div>
-                <div class="summary-box"><span>Camiseta</span><strong id="resumoCor">Roxa</strong></div>
-                <div class="summary-box"><span>Tamanho</span><strong id="resumoTamanho">M</strong></div>
-                <div class="summary-box"><span>Inscrição</span><strong>R$ 79,90</strong></div>
-                <div class="price">R$ 79,90</div>
-                <button type="submit" class="btn" id="btnFinalizar">FINALIZAR INSCRIÇÃO</button>
-                <div class="info">
-                    <div><i class="fa-solid fa-lock"></i> Ambiente protegido por criptografia SSL</div>
-                    <div><i class="fa-solid fa-shield-halved"></i> Dados armazenados com segurança</div>
-                    <div><i class="fa-solid fa-credit-card"></i> Pagamento processado pelo GGCheckout</div>
-                </div>
-            </div>
+           <div class="card summary">
+				<!-- Imagem da Camiseta integrada ao painel -->
+				<div class="summary-shirt">
+					<img src="https://github.com/isaacrotandarodossantos-a11y/initial/blob/main/2.png?raw=true" alt="Camiseta do Evento">
+				</div>
+				
+				<h2>Resumo do Pedido</h2>
+				<div class="summary-box"><span>Evento</span><strong>São Jorge Para Todos</strong></div>
+				<div class="summary-box"><span>Tamanho</span><strong id="resumoTamanho">-</strong></div>
+				<div class="summary-box"><span>Inscrição</span><strong>R$ 50,00</strong></div>
+				<div class="price">R$ 50,00</div>
+				
+				<button type="submit" class="btn" id="btnFinalizar">FINALIZAR INSCRIÇÃO</button>
+				
+				<div class="info">
+					<div><i class="fa-solid fa-lock"></i> Ambiente protegido por SSL</div>
+					<div><i class="fa-solid fa-shield-halved"></i> Dados armazenados com segurança</div>
+					<div><i class="fa-solid fa-credit-card"></i> Pagamento processado pelo GGCheckout</div>
+				</div>
+			</div>
         </div>
     </form>
 </div>
 
 <script>
-    // Atualiza o resumo visual enquanto o cliente digita
     const form = document.getElementById("checkoutForm");
-    form.addEventListener("change", () => {
+
+    // 1. Atualiza o resumo visual em tempo real (usando 'input')
+    form.addEventListener("input", () => {
         const formData = new FormData(form);
-        document.getElementById("resumoModalidade").innerText = formData.get("modalidade") || "Corrida 5 KM";
-        document.getElementById("resumoCor").innerText = formData.get("cor") || "Roxa";
-        document.getElementById("resumoTamanho").innerText = formData.get("tamanho") || "M";
+        const mod = document.getElementById("resumoModalidade");
+        const tam = document.getElementById("resumoTamanho");
+        
+        if (mod) mod.innerText = formData.get("modalidade") || "-";
+        if (tam) tam.innerText = formData.get("tamanho") || "-";
     });
 
+    // 2. Aplicação de Máscaras (CPF e Telefones)
+    function aplicarMascara(e) {
+        let valor = e.target.value.replace(/\D/g, "");
+        const nome = e.target.name;
+
+        if (nome === "cpf") {
+            valor = valor.replace(/(\d{3})(\d)/, "$1.$2")
+                         .replace(/(\d{3})(\d)/, "$1.$2")
+                         .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+        } else if (nome === "telefone" || nome === "emergencia_tel") {
+            valor = valor.replace(/^(\d{2})(\d)/g, "($1) $2")
+                         .replace(/(\d{5})(\d{4})$/, "$1-$2");
+        }
+        e.target.value = valor.substring(0, nome === "cpf" ? 14 : 15);
+    }
+
+    document.querySelectorAll('input[name="cpf"], input[name="telefone"], input[name="emergencia_tel"]').forEach(input => {
+        input.addEventListener("input", aplicarMascara);
+    });
+
+    // 3. Lógica de Envio (Fetch)
     document.getElementById("checkoutForm").addEventListener("submit", function(e) {
         e.preventDefault();
         
@@ -162,14 +206,11 @@
         btn.disabled = true;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> GERANDO PAGAMENTO...';
 
-        // Captura os dados do formulário
-        const dadosForm = {
-            nome: document.querySelector('input[name="nome"]').value,
-            email: document.querySelector('input[name="email"]').value
-        };
+        // Captura todos os dados do formulário de forma dinâmica
+        const formData = new FormData(form);
+        const dadosForm = Object.fromEntries(formData.entries());
 
-        // Envia para o seu servidor Flask
-        fetch("/gerar-link-pagamento", { 
+        fetch("https://pgvnd.onrender.com/", { 
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(dadosForm)
@@ -179,10 +220,14 @@
             if (data.link) {
                 window.location.href = data.link; 
             } else {
-                alert("Erro ao gerar link. Tente novamente.");
-                btn.disabled = false;
-                btn.innerHTML = "FINALIZAR INSCRIÇÃO";
+                throw new Error("Link não retornado");
             }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erro ao gerar link. Tente novamente.");
+            btn.disabled = false;
+            btn.innerHTML = "FINALIZAR INSCRIÇÃO";
         });
     });
 </script>
