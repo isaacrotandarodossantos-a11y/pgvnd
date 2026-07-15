@@ -9,7 +9,7 @@ def gerar_link_pagamento(nome):  # Mantemos o nome da função para não quebrar
     request_options.idempotency_key = str(uuid.uuid4())
 
     payment_data = {
-        "transaction_amount": 50.00,
+        "transaction_amount": 0.01,
         "description": "Inscrição São Jorge Para Todos",
         "payment_method_id": "pix",  # Força o método Pix
         "payer": {
