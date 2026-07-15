@@ -13,61 +13,82 @@ sdk = mercadopago.SDK(TOKEN)
 
 GOOGLE_SHEET_URL = "https://google.com"
 
-# Tela visual do Pix gerada pelo seu próprio Render (Sem Webhook)
-TELA_PIX_HTML = """
+# Esta página carrega o Checkout Oficial do Mercado Pago DENTRO do seu servidor.
+# Ela processa Cartão, Pix e Boleto e redireciona SOZINHA após o pagamento!
+TELA_CHECKOUT_TRANSPARENTE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Pague com o Pix</title>
+    <title>Pagamento Seguro</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background: #f4f4f9; color: #333; }
-        .box { background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 90%; width: 350px; }
-        textarea { width: 100%; height: 60px; margin: 15px 0; padding: 5px; box-sizing: border-box; resize: none; border: 1px solid #ccc; border-radius: 4px; }
-        button { background: #009ee3; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; }
-        button:hover { background: #007bb6; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #28a745; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
+    <!-- Carrega a biblioteca oficial do Mercado Pago -->
+    <script src="https://mercadopago.com"></script>
 </head>
 <body>
-    <div class="box">
-        <h2>Inscrição São Jorge</h2>
-        <p>Escaneie ou copie o Pix abaixo para pagar:</p>
-        <img src="data:image/jpeg;base64,{{ qrcode_base64 }}" width="220" style="margin: 10px 0;"><br>
-        <textarea id="pixCode" readonly>{{ qrcode_copia_e_cola }}</textarea><br>
-        <button onclick="copiarPix()">Copiar Código Pix</button>
-        
-        <p style="color: #28a745; font-weight: bold; margin-top: 20px;">
-            <span class="loader"></span>Aguardando pagamento...
-        </p>
-        <p style="font-size:12px; color:#777; margin-top: -10px;">Esta tela mudará sozinha assim que você pagar no app do seu banco.</p>
-    </div>
+    <!-- Onde o checkout com Pix, Cartão e Boleto vai aparecer na tela -->
+    <div id="paymentBrick_container"></div>
 
     <script>
-        // O navegador fica perguntando diretamente para a API do seu Render se o Pix foi pago
-        const intervalo = setInterval(async () => {
-            try {
-                const response = await fetch('/verificar-pagamento-direto?payment_id={{ payment_id }}');
-                const dados = await response.json();
-                
-                if (dados.status === 'approved') {
-                    clearInterval(intervalo);
-                    // Redireciona na hora para a página de sucesso
-                    window.location.href = "/compracerta?payment_id={{ payment_id }}";
-                }
-            } catch (erro) {
-                console.error("Erro ao checar status:", erro);
-            }
-        }, 3000); // Executa a cada 3 segundos
+        // Inicializa o Mercado Pago com sua Public Key obtida do token
+        const mp = new MercadoPago('APP_USR-6725287e-d30d-4054-946f-d90c1e8ba84a');
+        const bricksBuilder = mp.bricks();
 
-        function copiarPix() {
-            var copyText = document.getElementById("pixCode");
-            copyText.select();
-            copyText.setSelectionRange(0, 99999);
-            navigator.clipboard.writeText(copyText.value);
-            alert("Código Pix copiado!");
-        }
+        const renderPaymentBrick = async (bricksBuilder) => {
+            const settings = {
+                initialization: {
+                    amount: 0.01, // Valor final de R$ 0,01 centavo
+                    preferenceId: "{{ preference_id }}",
+                    payer: {
+                        firstName: "{{ nome }}",
+                        email: "comprador@email.com"
+                    },
+                },
+                customization: {
+                    paymentMethods: {
+                        theme: "default",
+                        allPaymentMethods: "all", // Ativa Pix, Cartão, Boleto, etc.
+                    },
+                },
+                callbacks: {
+                    onReady: () => {
+                        console.log("Checkout pronto!");
+                    },
+                    onSubmit: ({ selectedPaymentMethod, formData }) => {
+                        // Quando o cliente clica em pagar, envia direto para o Mercado Pago
+                        return new Promise((resolve, reject) => {
+                            fetch("/processar-pagamento-direto", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify(formData),
+                            })
+                            .then((response) => response.json())
+                            .then((result) => {
+                                if (result.status === "approved" || result.status == "pending") {
+                                    // REDIRECIONA NA HORA!
+                                    window.location.href = "/compracerta?payment_id=" + result.id;
+                                } else {
+                                    window.location.href = "/compraerrada";
+                                }
+                                resolve();
+                            })
+                            .catch((error) => {
+                                window.location.href = "/compraerrada";
+                                reject();
+                            });
+                        });
+                    },
+                    onError: (error) => {
+                        console.error(error);
+                    },
+                },
+            };
+            window.paymentBrickController = await bricksBuilder.create(
+                "payment",
+                "paymentBrick_container",
+                settings
+            );
+        };
+        renderPaymentBrick(bricksBuilder);
     </script>
 </body>
 </html>
@@ -77,69 +98,56 @@ TELA_PIX_HTML = """
 def homepage():
     return render_template("index.html")
 
-# ROTA DA NETLIFY: Gera o Pix diretamente e joga para a tela customizada
+# ROTA DA NETLIFY: Manda o cliente para a tela integrada do Render
 @app.route("/gerar-link-pagamento", methods=["POST"])
 def api_gerar_link():
     dados = request.get_json() or {}
     nome = dados.get("nome", "Participante")
-    # A API de pagamento direto do Pix exige um formato de e-mail do pagador
-    email = dados.get("email", "comprador@email.com") 
 
     try:
         requests.post(GOOGLE_SHEET_URL, json=dados, timeout=10)
     except Exception as e:
         print(f"Erro ao salvar na planilha: {e}")
 
-    # Criando a cobrança Pix via Checkout Transparente (Direct API)
-    payment_data = {
-        "transaction_amount": 0.01, # Mantido R$ 10.00 para evitar travas de antifraude
-        "description": "Inscrição São Jorge Para Todos",
-        "payment_method_id": "pix",
-        "payer": {
-            "email": email,
-            "first_name": nome
-        }
+    # Cria uma preferência leve apenas para registrar o item de R$ 0,01
+    preference_data = {
+        "items": [{"title": "Inscrição São Jorge", "quantity": 1, "currency_id": "BRL", "unit_price": 0.01}]
     }
-
+    
     try:
-        result = sdk.payment().create(payment_data)
-        payment = result.get("response")
-        
-        if payment and "point_of_interaction" in payment:
-            pix_info = payment["point_of_interaction"]["transaction_data"]
-            
-            # Retorna o link da nossa própria página interna do Render que exibe o Pix
-            link_proprio = f"https://onrender.com{payment['id']}&qr={pix_info['qr_code_base64']}&code={requests.utils.quote(pix_info['qr_code'])}"
+        result = sdk.preference().create(preference_data)
+        pref = result.get("response")
+        if pref:
+            # Retorna o link da página do Render que vai abrir o checkout direto na tela do usuário
+            link_proprio = f"https://onrender.com{pref['id']}&nome={requests.utils.quote(nome)}"
             return jsonify({"link": link_proprio})
-            
     except Exception as e:
-        print(f"Erro ao gerar Pix: {e}")
-        
+        print(f"Erro: {e}")
+
     return jsonify({"error": "Erro ao gerar pagamento"}), 500
 
-# Rota que renderiza a tela visual do QR Code
-@app.route("/mostrar-pix")
-def mostrar_pix():
-    payment_id = request.args.get("id")
-    qr = request.args.get("qr")
-    code = request.args.get("code")
-    return render_template_string(TELA_PIX_HTML, payment_id=payment_id, qrcode_base64=qr, qrcode_copia_e_cola=code)
 
-# ROTA DE CHECAGEM: O Javascript da página fica batendo aqui de 3 em 3 segundos
-@app.route("/verificar-pagamento-direto")
-def verificar_pagamento_direto():
-    payment_id = request.args.get("payment_id")
-    if payment_id:
-        try:
-            # Pergunta em tempo real ao Mercado Pago o status atual desse ID
-            payment_info = sdk.payment().get(payment_id)
-            payment_data = payment_info.get("response")
-            if payment_data:
-                return jsonify({"status": payment_data.get("status")})
-        except Exception as e:
-            print(f"Erro ao consultar API: {e}")
-            
-    return jsonify({"status": "pending"})
+@app.route("/checkout-seguro")
+def checkout_seguro():
+    preference_id = request.args.get("id")
+    nome = request.args.get("nome")
+    return render_template_string(TELA_CHECKOUT_TRANSPARENTE, preference_id=preference_id, nome=nome)
+
+
+# ROTA QUE FAZ A MÁGICA: Executa o pagamento e devolve a resposta instantânea
+@app.route("/processar-pagamento-direto", methods=["POST"])
+def processar_pagamento_direto():
+    form_data = request.get_json()
+    try:
+        result = sdk.payment().create(form_data)
+        payment = result.get("response")
+        return jsonify({
+            "status": payment.get("status"),
+            "id": payment.get("id")
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 
 @app.route("/compracerta")
 def compra_certa():
@@ -157,6 +165,7 @@ def compra_certa():
             print(f"Erro ao consultar API: {e}")
     
     return render_template("compracerta.html", status=status_final)
+
 
 @app.route("/compraerrada")
 def compra_errada():
