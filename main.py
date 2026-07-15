@@ -10,7 +10,7 @@ CORS(app)
 
 # SEGURANÇA: O token é lido da variável de ambiente, nunca fixo no código
 # No Render, vá em 'Environment' e adicione: MP_ACCESS_TOKEN = seu_novo_token_aqui
-ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN")
+ACCESS_TOKEN = os.getenv("APP_USR-8677986015174769-071410-f913279c1c5f01176f80d34cac8c035b-722783171")
 sdk = mercadopago.SDK(ACCESS_TOKEN)
 
 GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbw0PtbqTkA0Q7KIP1lnPX5BtMVmRW0q0m64ser2hJaxVBgaqI_zgirBr8OFBlb4nq58/exec"
