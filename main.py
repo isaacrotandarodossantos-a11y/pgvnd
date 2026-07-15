@@ -15,10 +15,18 @@ def homepage():
 @app.route("/gerar-link-pagamento", methods=["POST"])
 def api_gerar_link():
     dados = request.get_json() or {}
+    
+    # Extraindo os valores do JSON enviado pelo formulário
     nome = dados.get("nome", "Participante")
     email = dados.get("email")
+    cpf = dados.get("cpf") # Adicionado: capturando o CPF aqui
 
-    link = gerar_link_pagamento(nome=nome, email=email)
+    # Validação simples
+    if not cpf:
+        return jsonify({"error": "CPF é obrigatório"}), 400
+
+    # Chamada corrigida: passando o CPF agora
+    link = gerar_link_pagamento(nome=nome, email=email, cpf=cpf)
     
     if link:
         return jsonify({"link": link})
@@ -26,8 +34,6 @@ def api_gerar_link():
 
 @app.route("/compracerta")
 def compra_certa():
-    # O envio de e-mail agora acontece automaticamente via JavaScript 
-    # no arquivo compracerta.html, sem necessidade de lógica no servidor.
     return render_template("compracerta.html")
 
 @app.route("/compraerrada")
