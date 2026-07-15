@@ -167,18 +167,21 @@
 
 <script>
     const form = document.getElementById("checkoutForm");
+    const btn = document.getElementById("btnFinalizar");
 
-    // 1. Atualiza o resumo visual em tempo real (usando 'input')
+    // 1. Atualiza o resumo visual em tempo real
     form.addEventListener("input", () => {
         const formData = new FormData(form);
         const mod = document.getElementById("resumoModalidade");
+        const cor = document.getElementById("resumoCor");
         const tam = document.getElementById("resumoTamanho");
-        
-        if (mod) mod.innerText = formData.get("modalidade") || "-";
-        if (tam) tam.innerText = formData.get("tamanho") || "-";
+
+        if (mod) mod.innerText = formData.get("modalidade") || "Corrida 5 KM";
+        if (cor) cor.innerText = formData.get("cor") || "Roxa";
+        if (tam) tam.innerText = formData.get("tamanho") || "M";
     });
 
-    // 2. Aplicação de Máscaras (CPF e Telefones)
+    // 2. Aplicação de Máscaras (CPF e Telefone)
     function aplicarMascara(e) {
         let valor = e.target.value.replace(/\D/g, "");
         const nome = e.target.name;
@@ -198,19 +201,19 @@
         input.addEventListener("input", aplicarMascara);
     });
 
-    // 3. Lógica de Envio (Fetch)
-    document.getElementById("checkoutForm").addEventListener("submit", function(e) {
+    // 3. Submissão (A sua estrutura original que funcionava)
+    form.addEventListener("submit", function(e) {
         e.preventDefault();
         
-        const btn = document.getElementById("btnFinalizar");
         btn.disabled = true;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> GERANDO PAGAMENTO...';
 
-        // Captura todos os dados do formulário de forma dinâmica
+        // Captura todos os campos do formulário automaticamente
         const formData = new FormData(form);
         const dadosForm = Object.fromEntries(formData.entries());
 
-        fetch("https://pgvnd.onrender.com/", { 
+        // Envia para o servidor
+        fetch("/gerar-link-pagamento", { 
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(dadosForm)
@@ -220,12 +223,13 @@
             if (data.link) {
                 window.location.href = data.link; 
             } else {
-                throw new Error("Link não retornado");
+                alert("Erro ao gerar link. Tente novamente.");
+                btn.disabled = false;
+                btn.innerHTML = "FINALIZAR INSCRIÇÃO";
             }
         })
         .catch(err => {
-            console.error(err);
-            alert("Erro ao gerar link. Tente novamente.");
+            alert("Erro de conexão com o servidor.");
             btn.disabled = false;
             btn.innerHTML = "FINALIZAR INSCRIÇÃO";
         });
