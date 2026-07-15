@@ -10,7 +10,7 @@ def gerar_link_pagamento(nome):
                 "title": "Inscrição São Jorge Para Todos",
                 "quantity": 1,
                 "currency_id": "BRL",
-                "unit_price": 0.01  # AUMENTADO PARA R$ 10.00 (Valores < R$ 1.00 costumam travar)
+                "unit_price": 50.00  # AUMENTADO PARA R$ 10.00 (Valores < R$ 1.00 costumam travar)
             }
         ],
         "payer": {
