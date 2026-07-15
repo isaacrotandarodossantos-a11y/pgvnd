@@ -1,34 +1,39 @@
 import mercadopago
 
-def gerar_pix_pagamento(nome, email):
+def gerar_link_pagamento(nome):
     token = "APP_USR-8677986015174769-071410-f913279c1c5f01176f80d34cac8c035b-722783171"
     sdk = mercadopago.SDK(token)
 
-    payment_data = {
-        "transaction_amount": 0.01, # Valor corrigido para R$ 10.00
-        "description": "Inscrição São Jorge Para Todos",
-        "payment_method_id": "pix",  # Força o método de pagamento a ser Pix
+    preference_data = {
+        "items": [
+            {
+                "title": "Inscrição São Jorge Para Todos",
+                "quantity": 1,
+                "currency_id": "BRL",
+                "unit_price": 0.01  # AUMENTADO PARA R$ 10.00 (Valores < R$ 1.00 costumam travar)
+            }
+        ],
         "payer": {
-            "email": email,          # OBRIGATÓRIO para Pix na API de Payments
-            "first_name": nome
+            "name": nome
         },
-        "notification_url": "https://suaapi.com" # URL para receber a confirmação
+        "back_urls": {
+            "success": "https://bucolic-fox-ea9bba.netlify.app/",
+            "failure": "https://pgvnd.onrender.com/compraerrada",
+            "pending": "https://pgvnd.onrender.com/compraerrada"
+        },
+        "auto_return": "approved", # Tenta redirecionar automaticamente
+        "binary_mode": False,        # Força aprovação imediata (sem pendência)
+        "statement_descriptor": "INSCRICAO SJ" # Nome que aparece no extrato
     }
     
     try:
-        # Usando sdk.payment().create() em vez de preference
-        result = sdk.payment().create(payment_data)
+        result = sdk.preference().create(preference_data)
         payment = result.get("response")
         
-        if payment and "point_of_interaction" in payment:
-            pix_info = payment["point_of_interaction"]["transaction_data"]
-            return {
-                "qr_code_base64": pix_info["qr_code_base64"], # Imagem do QR Code
-                "qr_code": pix_info["qr_code"],               # Chave Copia e Cola
-                "payment_id": payment["id"]                    # ID para consultar o status depois
-            }
+        if payment and "init_point" in payment:
+            return payment["init_point"]
         else:
-            print(f"Erro na criação do Pix: {result}")
+            print(f"Erro na criação da preferência: {result}")
             return None
             
     except Exception as e:
