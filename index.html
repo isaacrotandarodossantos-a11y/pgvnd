@@ -177,26 +177,27 @@
         }
 
         // Envia para o servidor
-      fetch('/gerar-link-pagamento', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nome: nomeDoParticipante }) // Certifique-se que você está pegando o nome aqui
-})
-.then(response => response.json())
-.then(data => {
-    if (data.link) {
-        // A MÁGICA: Abre o Mercado Pago em uma nova aba imediatamente
-        window.open(data.link, '_blank');
-        
-        // Opcional: Avisa o usuário que a aba abriu
-        alert("Página de pagamento aberta em uma nova aba!");
-    } else {
-        alert("Erro ao gerar link. Tente novamente.");
-    }
-})
-.catch(error => {
-    console.error("Erro:", error);
-});
+      fetch("/gerar-link-pagamento", { 
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dadosForm)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.link) {
+                window.location.href = data.link; 
+            } else {
+                alert("Erro ao gerar link. Tente novamente.");
+                btn.disabled = false;
+                btn.innerHTML = "FINALIZAR INSCRIÇÃO";
+            }
+        })
+        .catch(err => {
+            alert("Erro de conexão com o servidor.");
+            btn.disabled = false;
+            btn.innerHTML = "FINALIZAR INSCRIÇÃO";
+        });
+    });
 </script>
 </body>
 </html>
