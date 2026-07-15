@@ -134,8 +134,10 @@
         </div>
     </form>
 </div>
-
 <script>
+    // URL CRÍTICA: Substitua o endereço abaixo pela URL real do seu servidor no Render
+    const URL_SERVIDOR = "https://onrender.com"; 
+
     const form = document.getElementById("checkoutForm");
     const btn = document.getElementById("btnFinalizar");
 
@@ -161,39 +163,66 @@
         input.addEventListener("input", aplicarMascara);
     });
 
-    // 3. Submissão Corrigida
+    // 3. Submissão Corrigida para Pix Transparente
     form.addEventListener("submit", function(e) {
         e.preventDefault();
         
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> GERANDO PAGAMENTO...';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> GERANDO PIX...';
 
         const formData = new FormData(form);
         const dadosForm = Object.fromEntries(formData.entries());
 
-        // AVISO CRÍTICO: Limpamos o CPF aqui para o JSON ir apenas com números
         if (dadosForm.cpf) {
             dadosForm.cpf = dadosForm.cpf.replace(/\D/g, "");
         }
 
-        // Envia para o servidor
-      fetch("/gerar-link-pagamento", { 
+        // Conecta com a rota de Pix Transparente do seu Render
+        fetch(`${URL_SERVIDOR}/gerar-link-pagamento`, { 
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(dadosForm)
         })
         .then(response => response.json())
-        .then(data => {
-            if (data.link) {
-                window.location.href = data.link; 
+        .then(dadosPix => {
+            // Verifica se a API retornou o ID do Pix em vez de um link comum
+            if (dadosPix && dadosPix.id) {
+                
+                // Oculta o formulário original para dar espaço ao Pix
+                form.style.display = "none";
+                
+                // Torna visível o bloco onde o QR Code e o Copia e Cola vão aparecer
+                document.getElementById("area-pix").style.display = "block"; 
+                document.getElementById("imagem-qrcode").src = `data:image/jpeg;base64,${dadosPix.qr_code_base64}`;
+                document.getElementById("texto-copia-cola").value = dadosPix.copia_e_cola;
+
+                // ATIVA O SENSOR: Pergunta ao servidor a cada 3 segundos se o Pix foi pago
+                const idPagamento = dadosPix.id;
+                const intervalo = setInterval(async () => {
+                    try {
+                        const checar = await fetch(`${URL_SERVIDOR}/verificar-pagamento/${idPagamento}`);
+                        const resultado = await checar.json();
+
+                        if (resultado.status === "approved") {
+                            clearInterval(intervalo); // Desliga o sensor de checagem
+                            
+                            // MANDA O CLIENTE SOZINHO PARA O AGRADECIMENTO NO NETLIFY!
+                            window.location.href = "https://netlify.app";
+                        }
+                    } catch (erroSensor) {
+                        console.log("Aguardando confirmação do banco...", erroSensor);
+                    }
+                }, 3000); // Executa a verificação a cada 3 segundos
+
             } else {
-                alert("Erro ao gerar link. Tente novamente.");
+                alert("Erro ao gerar Pix de pagamento. Tente novamente.");
                 btn.disabled = false;
                 btn.innerHTML = "FINALIZAR INSCRIÇÃO";
             }
         })
         .catch(err => {
-            alert("Erro de conexão com o servidor.");
+            console.error("Erro completo:", err);
+            alert("Erro de conexão com o servidor de pagamento.");
             btn.disabled = false;
             btn.innerHTML = "FINALIZAR INSCRIÇÃO";
         });
