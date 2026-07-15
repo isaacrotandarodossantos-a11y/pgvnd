@@ -8,9 +8,9 @@ from apimercadopago import gerar_link_pagamento
 app = Flask(__name__, template_folder='.')
 CORS(app)
 
-# SEGURANÇA: O token é lido da variável de ambiente, nunca fixo no código
-# No Render, vá em 'Environment' e adicione: MP_ACCESS_TOKEN = seu_novo_token_aqui
-sdk = mercadopago.SDK("APP_USR-8677986015174769-071410-f913279c1c5f01176f80d34cac8c035b-722783171")
+# Definição do Token (Lembre-se de trocar no painel do Mercado Pago depois por segurança!)
+TOKEN_MP = "APP_USR-8677986015174769-071410-f913279c1c5f01176f80d34cac8c035b-722783171"
+sdk = mercadopago.SDK(TOKEN_MP)
 
 GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbw0PtbqTkA0Q7KIP1lnPX5BtMVmRW0q0m64ser2hJaxVBgaqI_zgirBr8OFBlb4nq58/exec"
 
@@ -24,10 +24,12 @@ def api_gerar_link():
     nome = dados.get("nome", "Participante")
 
     try:
+        # Envia os dados para salvar na sua planilha do Google Sheets
         requests.post(GOOGLE_SHEET_URL, json=dados, timeout=10)
     except Exception as e:
         print(f"Erro ao salvar na planilha: {e}")
 
+    # Gera o link travado apenas para PIX e direcionando para o Netlify
     link = gerar_link_pagamento(nome=nome)
     
     if link:
@@ -39,17 +41,15 @@ def compra_certa():
     payment_id = request.args.get("payment_id")
     status_final = "pendente"
 
-    # Se o ID existir, vamos ao Mercado Pago validar
     if payment_id:
         try:
             payment_info = sdk.payment().get(payment_id)
             if payment_info and "response" in payment_info:
                 status_real = payment_info["response"].get("status")
-                # Se aprovado, confirmamos o status
                 if status_real == "approved":
                     status_final = "confirmado"
                 else:
-                    status_final = status_real # Ex: rejected, pending
+                    status_final = status_real
         except Exception as e:
             print(f"Erro ao consultar API: {e}")
     
