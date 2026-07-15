@@ -136,42 +136,45 @@
 </div>
 
 <script>
-        const form = document.getElementById("checkoutForm");
-        const btn = document.getElementById("btnFinalizar");
-        const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbw0PtbqTkA0Q7KIP1lnPX5BtMVmRW0q0m64ser2hJaxVBgaqI_zgirBr8OFBlb4nq58/exec";
+    const form = document.getElementById("checkoutForm");
+    const btn = document.getElementById("btnFinalizar");
 
-        // 1. Atualização do resumo visual
-        form.addEventListener("input", () => {
-            const formData = new FormData(form);
-            document.getElementById("resumoModalidade").innerText = formData.get("modalidade") || "Corrida & Caminhada";
-            document.getElementById("resumoTamanho").innerText = formData.get("tamanho") || "M";
-        });
+    // 1. Atualização do resumo visual
+    form.addEventListener("input", () => {
+        const formData = new FormData(form);
+        document.getElementById("resumoModalidade").innerText = formData.get("modalidade") || "Corrida & Caminhada";
+        document.getElementById("resumoTamanho").innerText = formData.get("tamanho") || "M";
+    });
 
-        // 2. Máscaras
-        function aplicarMascara(e) {
-            let valor = e.target.value.replace(/\D/g, "");
-            const nome = e.target.name;
-            if (nome === "cpf") {
-                valor = valor.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-            } else if (nome === "telefone" || nome === "emergencia_tel") {
-                valor = valor.replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d{5})(\d{4})$/, "$1-$2");
-            }
-            e.target.value = valor.substring(0, nome === "cpf" ? 14 : 15);
+    // 2. Máscaras
+    function aplicarMascara(e) {
+        let valor = e.target.value.replace(/\D/g, "");
+        const nome = e.target.name;
+        if (nome === "cpf") {
+            valor = valor.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+        } else if (nome === "telefone" || nome === "emergencia_tel") {
+            valor = valor.replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d{5})(\d{4})$/, "$1-$2");
         }
-        document.querySelectorAll('input[name="cpf"], input[name="telefone"], input[name="emergencia_tel"]').forEach(input => {
-            input.addEventListener("input", aplicarMascara);
-        });
+        e.target.value = valor.substring(0, nome === "cpf" ? 14 : 15);
+    }
+    document.querySelectorAll('input[name="cpf"], input[name="telefone"], input[name="emergencia_tel"]').forEach(input => {
+        input.addEventListener("input", aplicarMascara);
+    });
 
-        // 3. Submissão Corrigida
-       form.addEventListener("submit", function(e) {
+    // 3. Submissão Corrigida
+    form.addEventListener("submit", function(e) {
         e.preventDefault();
         
         btn.disabled = true;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> GERANDO PAGAMENTO...';
 
-        // Captura todos os campos do formulário automaticamente
         const formData = new FormData(form);
         const dadosForm = Object.fromEntries(formData.entries());
+
+        // AVISO CRÍTICO: Limpamos o CPF aqui para o JSON ir apenas com números
+        if (dadosForm.cpf) {
+            dadosForm.cpf = dadosForm.cpf.replace(/\D/g, "");
+        }
 
         // Envia para o servidor
         fetch("/gerar-link-pagamento", { 
@@ -182,19 +185,22 @@
         .then(response => response.json())
         .then(data => {
             if (data.link) {
+                // Redirecionamento direto para o checkout seguro
                 window.location.href = data.link; 
             } else {
-                alert("Erro ao gerar link. Tente novamente.");
+                console.error("Erro do servidor:", data.error);
+                alert("Erro ao gerar link: " + (data.error || "Tente novamente."));
                 btn.disabled = false;
                 btn.innerHTML = "FINALIZAR INSCRIÇÃO";
             }
         })
         .catch(err => {
+            console.error("Erro de rede:", err);
             alert("Erro de conexão com o servidor.");
             btn.disabled = false;
             btn.innerHTML = "FINALIZAR INSCRIÇÃO";
         });
     });
-    </script>
+</script>
 </body>
 </html>
