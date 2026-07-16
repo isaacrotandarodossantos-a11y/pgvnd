@@ -97,9 +97,9 @@ def gerar_cartao_pagamento():
         "statement_descriptor": "INSCRICAO SJ",
         "binary_mode": True, 
         "back_urls": {
-            "success": "https://netlify.app", # Corrigido o hhttps://
-            "failure": "https://netlify.app",
-            "pending": "https://netlify.app"
+            "success": "https://cheery-fox-9fdceb.netlify.app/", # Corrigido o hhttps://
+            "failure": "https://app.netlify.com/projects/celebrated-kleicha-6666ee/overview",
+            "pending": "https://app.netlify.com/projects/celebrated-kleicha-6666ee/overview"
         },
         "auto_return": "approved",
         "external_reference": email
