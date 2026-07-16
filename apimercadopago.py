@@ -10,7 +10,7 @@ def gerar_link_pagamento():
     email = dados_recebidos.get("email", "participante@email.com")
     nome = dados_recebidos.get("nome", "Participante")
 
-    token = "APP_USR-8677986015174769-071410-f913279c1c5f01176f80d34cac8c035b-722783171"
+    token = "TEST-8677986015174769-071410-62092e2af1b3457c19aa12ee873e701c-722783171"
     sdk = mercadopago.SDK(token)
     request_options = mercadopago.config.RequestOptions()
     request_options.idempotency_key = str(uuid.uuid4())
@@ -51,7 +51,7 @@ def gerar_cartao_pagamento():
     dados_recebidos = request.get_json() or {}
     email = dados_recebidos.get("email", "participante@email.com")
 
-    token = "APP_USR-8677986015174769-071410-f913279c1c5f01176f80d34cac8c035b-722783171"
+    token = "TEST-8677986015174769-071410-62092e2af1b3457c19aa12ee873e701c-722783171"
     sdk = mercadopago.SDK(token)
     request_options = mercadopago.config.RequestOptions()
     request_options.idempotency_key = str(uuid.uuid4())
