@@ -10,7 +10,7 @@ def gerar_link_pagamento():
     email = dados_recebidos.get("email", "participante@email.com")
     nome = dados_recebidos.get("nome", "Participante")
 
-    token = "TEST-8677986015174769-071410-62092e2af1b3457c19aa12ee873e701c-722783171"
+    token = "APP_USR-8677986015174769-071410-f913279c1c5f01176f80d34cac8c035b-722783171"
     sdk = mercadopago.SDK(token)
     request_options = mercadopago.config.RequestOptions()
     request_options.idempotency_key = str(uuid.uuid4())
@@ -51,7 +51,7 @@ def gerar_cartao_pagamento():
     dados_recebidos = request.get_json() or {}
     email = dados_recebidos.get("email", "participante@email.com")
 
-    token = "TEST-8677986015174769-071410-62092e2af1b3457c19aa12ee873e701c-722783171"
+    token = "APP_USR-8677986015174769-071410-f913279c1c5f01176f80d34cac8c035b-722783171"
     sdk = mercadopago.SDK(token)
     request_options = mercadopago.config.RequestOptions()
     request_options.idempotency_key = str(uuid.uuid4())
@@ -74,9 +74,9 @@ def gerar_cartao_pagamento():
         # O binary_mode: True remove o status 'pending' (fica apenas approved ou rejected)
         "binary_mode": True, 
         "back_urls": {
-            "success": "https://SEU-SITE.netlify.app/checkout.html",
-            "failure": "https://SEU-SITE.netlify.app/checkout.html",
-            "pending": "https://SEU-SITE.netlify.app/checkout.html"
+            "success": "hhttps://bucolic-fox-ea9bba.netlify.app/",
+            "failure": "https://celebrated-kleicha-6666ee.netlify.app/",
+            "pending": "https://celebrated-kleicha-6666ee.netlify.app/"
         },
         "auto_return": "approved",
         "external_reference": email
