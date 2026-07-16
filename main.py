@@ -1,4 +1,5 @@
 import os
+import json  # <--- ESSA LINHA É OBRIGATÓRIA PARA A PLANILHA FUNCIONAR!
 import requests
 import mercadopago
 from flask import Flask, render_template, jsonify, request
