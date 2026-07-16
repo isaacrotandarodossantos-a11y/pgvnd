@@ -1,7 +1,16 @@
 import mercadopago
 import uuid
+from flask import request, jsonify
 
-def gerar_link_pagamento(nome):  # Mantemos o nome da função para não quebrar seu servidor
+# =====================================================================
+# FUNÇÃO 1: EXCLUSIVA PARA GERAR PIX (Mostra o QR Code direto no site)
+# =====================================================================
+def gerar_link_pagamento():
+    dados_recebidos = request.get_json() or {}
+    
+    nome = dados_recebidos.get("nome", "Participante")
+    email = dados_recebidos.get("email", "participante@email.com")
+
     token = "APP_USR-8677986015174769-071410-f913279c1c5f01176f80d34cac8c035b-722783171"
     sdk = mercadopago.SDK(token)
 
@@ -9,11 +18,11 @@ def gerar_link_pagamento(nome):  # Mantemos o nome da função para não quebrar
     request_options.idempotency_key = str(uuid.uuid4())
 
     payment_data = {
-        "transaction_amount": 0.01,
+        "transaction_amount": 50.00,
         "description": "Inscrição São Jorge Para Todos",
-        "payment_method_id": "pix",  # Força o método Pix
+        "payment_method_id": "pix",
         "payer": {
-            "email": "participante@email.com",  # Obrigatório para gerar Pix
+            "email": email,
             "first_name": nome
         },
         "statement_descriptor": "INSCRICAO SJ"
@@ -23,18 +32,67 @@ def gerar_link_pagamento(nome):  # Mantemos o nome da função para não quebrar
         result = sdk.payment().create(payment_data, request_options)
         response = result.get("response")
         
-        if result.get("status") == 201 and response:
+        if response:
             point_of_interaction = response.get("point_of_interaction", {})
             transaction_data = point_of_interaction.get("transaction_data", {})
             
-            # Retorna os dados necessários para o seu site desenhar o Pix na tela
-            return {
+            return jsonify({
                 "id": response.get("id"),
-                "copia_e_cola": transaction_data.get("qr_code"),
-                "qr_code_base64": transaction_data.get("qr_code_base64")
-            }
-        print(f"Erro MP: {response}")
-        return None
+                "qr_code_base64": transaction_data.get("qr_code_base64"),
+                "copia_e_cola": transaction_data.get("qr_code")
+            }), 200
+        return jsonify({"erro": "Erro ao criar pagamento Pix"}), 400
     except Exception as e:
-        print(f"Erro crítico no Pix: {e}")
-        return None
+        return jsonify({"erro": str(e)}), 500
+
+
+# =====================================================================
+# FUNÇÃO 2: EXCLUSIVA PARA CARTÃO (Gera o link de redirecionamento)
+# =====================================================================
+def gerar_cartao_pagamento():
+    dados_recebidos = request.get_json() or {}
+    
+    nome = dados_recebidos.get("nome", "Participante")
+    email = dados_recebidos.get("email", "participante@email.com")
+
+    token = "APP_USR-8677986015174769-071410-f913279c1c5f01176f80d34cac8c035b-722783171"
+    sdk = mercadopago.SDK(token)
+
+    request_options = mercadopago.config.RequestOptions()
+    request_options.idempotency_key = str(uuid.uuid4())
+
+    preference_data = {
+        "items": [{
+            "title": "Inscrição São Jorge Para Todos",
+            "quantity": 1,
+            "unit_price": 50.00,
+            "currency_id": "BRL"
+        }],
+        "payer": {
+            "name": nome,
+            "email": email
+        },
+        "payment_methods": {
+            "excluded_payment_types": [{"id": "ticket"}, {"id": "bank_transfer"}],
+            "installments": 12
+        },
+        "statement_descriptor": "INSCRICAO SJ",
+        "back_urls": {
+            "success": "https://netlify.app",
+            "failure": "https://netlify.app",
+            "pending": "https://netlify.app"
+        },
+        "auto_return": "approved"
+    }
+    
+    try:
+        result = sdk.preference().create(preference_data, request_options)
+        response = result.get("response")
+        
+        if response:
+            return jsonify({
+                "link_cartao": response.get("init_point") 
+            }), 200
+        return jsonify({"erro": "Erro ao criar link do cartão"}), 400
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
