@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmar Pagamento</title>
+</head>
+<body>
+    <div id="formulario">
+        <h2>Confirmar Pagamento</h2>
+        <input type="text" id="nome" placeholder="Seu Nome Completo">
+        <input type="email" id="email" placeholder="Seu E-mail de Inscrição">
+        <button id="btnConfirmar" onclick="processar()">CONFIRMAR PAGAMENTO</button>
+    </div>
+
+    <!-- Área de Exibição de Dados -->
+    <div id="exibicao" style="display:none; border: 1px solid #ccc; padding: 20px; margin-top: 20px;">
+        <h3>Dados da Inscrição</h3>
+        <p><strong>Atleta:</strong> <span id="viewNome"></span></p>
+        <p><strong>CPF:</strong> <span id="viewCpf"></span></p>
+        <p><strong>E-mail:</strong> <span id="viewEmail"></span></p>
+        <p><strong>Contato:</strong> <span id="viewContato"></span></p>
+        <p><strong>Tamanho Camiseta:</strong> <span id="viewCamisa"></span></p>
+        <p><strong>Emergência:</strong> <span id="viewEmergencia"></span></p>
+        <p><strong>Número de Peito:</strong> <span id="viewNumero" style="font-size: 1.2em; font-weight: bold; color: #0056b3;"></span></p>
+        <p><strong>Status do Pagamento:</strong> <span id="viewStatus" style="color: green; font-weight: bold; padding: 2px 5px; background-color: #e6f4ea; border-radius: 4px;"></span></p>
+        <br>
+        <p>Sua inscrição no evento <b>São Jorge Para Todos</b> está confirmada!</p>
+    </div>
+
+    <script>
+        // Esta função global vai receber a resposta vinda direto do Google sem erros
+        window.retornoGoogle = function(json) {
+            const btn = document.getElementById("btnConfirmar");
+            btn.disabled = false;
+            btn.innerText = "CONFIRMAR PAGAMENTO";
+
+            // Remove o script temporário da página
+            const scriptTemp = document.getElementById("script-jsonp");
+            if (scriptTemp) scriptTemp.remove();
+
+            if (json.status === "ok") {
+                document.getElementById("formulario").style.display = "none";
+                
+                document.getElementById("viewNome").innerText = json.dados.nome;
+                document.getElementById("viewCpf").innerText = json.dados.cpf;
+                document.getElementById("viewEmail").innerText = json.dados.email;
+                document.getElementById("viewContato").innerText = json.dados.contato;
+                document.getElementById("viewCamisa").innerText = json.dados.tamanhoCamisa;
+                document.getElementById("viewEmergencia").innerText = json.dados.emergencia;
+                document.getElementById("viewNumero").innerText = json.dados.numeroPeito;
+                document.getElementById("viewStatus").innerText = json.dados.statusAtual;
+
+                document.getElementById("exibicao").style.display = "block";
+            } else if (json.status === "nao_encontrado") {
+                alert("Atenção: Seus dados não foram encontrados. Você precisa se inscrever no evento!");
+            } else {
+                alert("Erro no servidor do Google: " + json.status);
+            }
+        };
+
+        function processar() {
+            const btn = document.getElementById("btnConfirmar");
+            const nomeInput = document.getElementById("nome").value;
+            const emailInput = document.getElementById("email").value;
+
+            if (!nomeInput.trim() || !emailInput.trim()) {
+                alert("Por favor, preencha o Nome e o E-mail exatamente como cadastrado.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Processando...";
+
+            const dados = {
+                token_seguranca: "9921",
+                nome: nomeInput,
+                email: emailInput
+            };
+
+            // Envia via JSONP para ignorar o bloqueio de CORS do navegador
+            const urlScript = "https://script.google.com/macros/s/AKfycbw0PtbqTkA0Q7KIP1lnPX5BtMVmRW0q0m64ser2hJaxVBgaqI_zgirBr8OFBlb4nq58/exec";
+            const urlCompleta = `${urlScript}?callback=retornoGoogle&dados=${encodeURIComponent(JSON.stringify(dados))}`;
+
+            const script = document.createElement("script");
+            script.id = "script-jsonp";
+            script.src = urlCompleta;
+            
+            // Trata falhas catastróficas de conexão
+            script.onerror = function() {
+                alert("Erro crítico de comunicação. Verifique se a 'Nova Versão' foi publicada no painel do Google.");
+                btn.disabled = false;
+                btn.innerText = "CONFIRMAR PAGAMENTO";
+                script.remove();
+            };
+
+            document.body.appendChild(script);
+        }
+    </script>
+</body>
+</html>
