@@ -7,7 +7,7 @@ from flask_cors import CORS # Lembre-se de ativar o CORS no Flask
 app = Flask(__name__)
 CORS(app) # Permite que seu HTML acesse o Flask sem bloqueios
 
-URL_GOOGLE_SCRIPT = "https://google.com"
+URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbw0PtbqTkA0Q7KIP1lnPX5BtMVmRW0q0m64ser2hJaxVBgaqI_zgirBr8OFBlb4nq58/exec"
 
 def comunicar_google_sheets(acao, dados_atleta):
     """Envia os dados direto do Python para o Google Sheets via POST"""
