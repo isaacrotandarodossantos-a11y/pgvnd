@@ -86,24 +86,27 @@ def verificar_pagamento(payment_id):
 @app.route("/confirmar-cartao", methods=["POST"])
 def confirmar_cartao():
     dados = request.get_json() or {}
+    
+    # Captura o e-mail de forma inteligente, seja da memória ou da referência externa
     email_pagador = dados.get("email")
     id_pagamento = dados.get("payment_id")
     
-    print(f"[PEDIDO CARTAO]: Recebido retorno do cartão para o email: {email_pagador}")
+    print(f"[CARTAO PROCESSANDO]: Solicitando atualizacao para: {email_pagador}")
     
     if email_pagador:
         dados_atualizacao = {
             "acao": "confirmar_pagamento",
             "token_seguranca": CHAVE_SEGREDO,
             "email": email_pagador,
-            "payment_id": id_pagamento or "cartao_credito"
+            "payment_id": str(id_pagamento) if id_pagamento else "cartao_credito"
         }
         try:
-            res = requests.post(GOOGLE_SHEET_URL, json=dados_atualizacao, timeout=15, allow_redirects=True)
-            print(f"[LOG BAIXA CARTAO]: Resposta do Google -> {res.text}")
+            headers = {"Content-Type": "application/json"}
+            res = requests.post(GOOGLE_SHEET_URL, data=json.dumps(dados_atualizacao), headers=headers, timeout=15, allow_redirects=True)
+            print(f"[CONCLUIDO]: Resposta da planilha -> {res.text}")
             return jsonify({"status": "sucesso"}), 200
         except Exception as e:
-            print(f"[ERRO BAIXA CARTAO]: Falha ao mandar status pro Google -> {e}")
+            print(f"[ERRO]: Falha na conexao -> {e}")
             return jsonify({"status": "erro", "mensagem": str(e)}), 500
     return jsonify({"status": "dados_invalidos"}), 400
 
