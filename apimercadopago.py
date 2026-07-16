@@ -3,17 +3,15 @@ import uuid
 from flask import request, jsonify
 
 # =====================================================================
-# FUNÇÃO 1: EXCLUSIVA PARA GERAR PIX (Mostra o QR Code direto no site)
+# FUNÇÃO 1: EXCLUSIVA PARA GERAR PIX
 # =====================================================================
 def gerar_link_pagamento():
     dados_recebidos = request.get_json() or {}
-    
-    nome = dados_recebidos.get("nome", "Participante")
     email = dados_recebidos.get("email", "participante@email.com")
+    nome = dados_recebidos.get("nome", "Participante")
 
     token = "APP_USR-8677986015174769-071410-f913279c1c5f01176f80d34cac8c035b-722783171"
     sdk = mercadopago.SDK(token)
-
     request_options = mercadopago.config.RequestOptions()
     request_options.idempotency_key = str(uuid.uuid4())
 
@@ -32,7 +30,7 @@ def gerar_link_pagamento():
         result = sdk.payment().create(payment_data, request_options)
         response = result.get("response")
         
-        if response:
+        if response and "id" in response:
             point_of_interaction = response.get("point_of_interaction", {})
             transaction_data = point_of_interaction.get("transaction_data", {})
             
@@ -47,17 +45,14 @@ def gerar_link_pagamento():
 
 
 # =====================================================================
-# FUNÇÃO 2: EXCLUSIVA PARA CARTÃO (Gera o link de redirecionamento)
+# FUNÇÃO 2: EXCLUSIVA PARA CARTÃO (Sem parâmetros de Webhook)
 # =====================================================================
 def gerar_cartao_pagamento():
     dados_recebidos = request.get_json() or {}
-    
-    nome = dados_recebidos.get("nome", "Participante")
     email = dados_recebidos.get("email", "participante@email.com")
 
     token = "APP_USR-8677986015174769-071410-f913279c1c5f01176f80d34cac8c035b-722783171"
     sdk = mercadopago.SDK(token)
-
     request_options = mercadopago.config.RequestOptions()
     request_options.idempotency_key = str(uuid.uuid4())
 
@@ -69,7 +64,6 @@ def gerar_cartao_pagamento():
             "currency_id": "BRL"
         }],
         "payer": {
-            "name": nome,
             "email": email
         },
         "payment_methods": {
@@ -77,19 +71,21 @@ def gerar_cartao_pagamento():
             "installments": 12
         },
         "statement_descriptor": "INSCRICAO SJ",
+        # URLs de retorno ajustadas para carregar o e-mail do atleta na barra de endereço
         "back_urls": {
-            "success": "https://netlify.app",
+            "success": "https://netlify.app" + email,
             "failure": "https://netlify.app",
-            "pending": "https://netlify.app"
+            "pending": "https://netlify.app" + email
         },
         "auto_return": "approved"
+        # Notificação de URL removida completamente aqui
     }
     
     try:
         result = sdk.preference().create(preference_data, request_options)
         response = result.get("response")
         
-        if response:
+        if response and "init_point" in response:
             return jsonify({
                 "link_cartao": response.get("init_point") 
             }), 200
