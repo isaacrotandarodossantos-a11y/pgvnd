@@ -72,13 +72,12 @@ def gerar_cartao_pagamento():
         },
         "statement_descriptor": "INSCRICAO SJ",
         # Links de retorno limpos, apontando estritamente para a raiz do seu site
-        "back_urls": {
-            "success": "https://netlify.app",
-            "failure": "https://netlify.app",
-            "pending": "https://netlify.app"
+       "back_urls": {
+            "success": "https://SEU-SITE.netlify.app/checkout.html", # Remova o parâmetro aqui
+            "failure": "https://SEU-SITE.netlify.app/checkout.html",
+            "pending": "https://SEU-SITE.netlify.app/checkout.html"
         },
         "auto_return": "approved",
-        # REGRA DE OURO: Vincula o e-mail de forma nativa no campo de auditoria do Mercado Pago
         "external_reference": email
     }
     
