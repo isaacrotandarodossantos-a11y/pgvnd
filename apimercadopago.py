@@ -3,7 +3,7 @@ import uuid
 from flask import request, jsonify
 
 def gerar_link_pagamento():
-    dados_recebidos = request.get_json()
+    dados_recebidos = request.get_json() or {}
     
     nome = dados_recebidos.get("nome", "Participante")
     email = dados_recebidos.get("email", "participante@email.com")
@@ -18,7 +18,7 @@ def gerar_link_pagamento():
     # FLUXO 1: SE O USUÁRIO ESCOLHER PIX
     if metodo == "pix":
         payment_data = {
-            "transaction_amount": 0.01,
+            "transaction_amount": 50.00,
             "description": "Inscrição São Jorge Para Todos",
             "payment_method_id": "pix",
             "payer": {
@@ -30,8 +30,9 @@ def gerar_link_pagamento():
         try:
             result = sdk.payment().create(payment_data, request_options)
             response = result.get("response")
+            status_http = result.get("status")
             
-            if result.get("status") == 201 and response:
+            if status_http == 201 and response:
                 point_of_interaction = response.get("point_of_interaction", {})
                 transaction_data = point_of_interaction.get("transaction_data", {})
                 
@@ -72,9 +73,10 @@ def gerar_link_pagamento():
         try:
             result = sdk.preference().create(preference_data, request_options)
             response = result.get("response")
+            status_http = result.get("status")
             
-            # CORREÇÃO AQUI: Linha corrigida para validar os códigos HTTP de sucesso 200 e 201
-            if result.get("status") in [200, 201] and response:
+            # Validação simplificada sem usar operadores que possam quebrar
+            if (status_http == 200 or status_http == 201) and response:
                 return jsonify({
                     "id": "cartao_checkout", 
                     "link_cartao": response.get("init_point") 
