@@ -87,27 +87,26 @@ def verificar_pagamento(payment_id):
 @app.route("/confirmar-cartao", methods=["POST"])
 def confirmar_cartao():
     dados = request.get_json() or {}
-    
-    # Captura o e-mail de forma inteligente, seja da memória ou da referência externa
     email_pagador = dados.get("email")
-    id_pagamento = dados.get("payment_id")
     
-    print(f"[CARTAO PROCESSANDO]: Solicitando atualizacao para: {email_pagador}")
+    # Se não houver ID de pagamento vindo do JS, usamos uma string fixa 
+    # para a planilha saber que foi via cartão
+    id_pagamento = dados.get("payment_id", "aprovado_cartao")
+    
+    print(f"[CARTAO PROCESSANDO]: Confirmando email: {email_pagador}")
     
     if email_pagador:
         dados_atualizacao = {
             "acao": "confirmar_pagamento",
             "token_seguranca": CHAVE_SEGREDO,
             "email": email_pagador,
-            "payment_id": str(id_pagamento) if id_pagamento else "cartao_credito"
+            "payment_id": str(id_pagamento)
         }
         try:
             headers = {"Content-Type": "application/json"}
             res = requests.post(GOOGLE_SHEET_URL, data=json.dumps(dados_atualizacao), headers=headers, timeout=15, allow_redirects=True)
-            print(f"[CONCLUIDO]: Resposta da planilha -> {res.text}")
             return jsonify({"status": "sucesso"}), 200
         except Exception as e:
-            print(f"[ERRO]: Falha na conexao -> {e}")
             return jsonify({"status": "erro", "mensagem": str(e)}), 500
     return jsonify({"status": "dados_invalidos"}), 400
 
