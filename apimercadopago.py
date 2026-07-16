@@ -45,7 +45,7 @@ def gerar_link_pagamento():
 
 
 # =====================================================================
-# FUNÇÃO 2: EXCLUSIVA PARA CARTÃO (CORRIGIDA)
+# FUNÇÃO 2: EXCLUSIVA PARA CARTÃO (MUDANÇA REVISADA)
 # =====================================================================
 def gerar_cartao_pagamento():
     dados_recebidos = request.get_json() or {}
@@ -71,13 +71,15 @@ def gerar_cartao_pagamento():
             "installments": 12
         },
         "statement_descriptor": "INSCRICAO SJ",
-        # CORREÇÃO DEFINITIVA DAS URLS: Apontando para o seu link real do Netlify com parâmetros limpos
+        # Links de retorno limpos, apontando estritamente para a raiz do seu site
         "back_urls": {
             "success": "https://netlify.app",
             "failure": "https://netlify.app",
             "pending": "https://netlify.app"
         },
-        "auto_return": "approved"
+        "auto_return": "approved",
+        # REGRA DE OURO: Vincula o e-mail de forma nativa no campo de auditoria do Mercado Pago
+        "external_reference": email
     }
     
     try:
