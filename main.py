@@ -25,7 +25,8 @@ def homepage():
 def api_gerar_link():
     dados = request.get_json() or {}
     
-    dados["acao"] = "salvar_cadastro"
+    # 🚀 CORREÇÃO: Mudado de "salvar_cadastro" para "criar_pendente" para bater com o Google Script
+    dados["acao"] = "criar_pendente"
     dados["token_seguranca"] = CHAVE_SEGREDO
     
     try:
@@ -42,7 +43,8 @@ def api_gerar_link():
 def api_gerar_cartao():
     dados = request.get_json() or {}
     
-    dados["acao"] = "salvar_cadastro"
+    # 🚀 CORREÇÃO: Mudado de "salvar_cadastro" para "criar_pendente" para bater com o Google Script
+    dados["acao"] = "criar_pendente"
     dados["token_seguranca"] = CHAVE_SEGREDO
     
     try:
@@ -81,16 +83,13 @@ def verificar_pagamento(payment_id):
             return jsonify({"status": status})
         return jsonify({"status": "error"}), 400
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"error": "error", "message": str(e)}), 500
 
 # ROTA 4: ATUALIZA PLANILHA PARA QUEM MANDOU RETORNO DO CARTÃO
 @app.route("/confirmar-cartao", methods=["POST"])
 def confirmar_cartao():
     dados = request.get_json() or {}
     email_pagador = dados.get("email")
-    
-    # Se não houver ID de pagamento vindo do JS, usamos uma string fixa 
-    # para a planilha saber que foi via cartão
     id_pagamento = dados.get("payment_id", "aprovado_cartao")
     
     print(f"[CARTAO PROCESSANDO]: Confirmando email: {email_pagador}")
@@ -105,6 +104,27 @@ def confirmar_cartao():
         try:
             headers = {"Content-Type": "application/json"}
             res = requests.post(GOOGLE_SHEET_URL, data=json.dumps(dados_atualizacao), headers=headers, timeout=15, allow_redirects=True)
+            return jsonify({"status": "sucesso"}), 200
+        except Exception as e:
+            return jsonify({"status": "erro", "mensagem": str(e)}), 500
+    return jsonify({"status": "dados_invalidos"}), 400
+
+# 🚀 ROTA 5 NOVA: SUPORTE AO BOTÃO MANUAL DO WHATSAPP DO SEU SCRIPT.JS
+@app.route("/confirmar-pagamento-manual", methods=["POST"])
+def confirmar_manual():
+    dados = request.get_json() or {}
+    email_pagador = dados.get("email")
+    
+    if email_pagador:
+        dados_atualizacao = {
+            "acao": "confirmar_pagamento",
+            "token_seguranca": CHAVE_SEGREDO,
+            "email": email_pagador,
+            "payment_id": "confirmacao_manual_whatsapp"
+        }
+        try:
+            res = requests.post(GOOGLE_SHEET_URL, json=dados_atualizacao, timeout=15, allow_redirects=True)
+            print(f"[LOG WHATSAPP MANUAL]: Resposta do Google -> {res.text}")
             return jsonify({"status": "sucesso"}), 200
         except Exception as e:
             return jsonify({"status": "erro", "mensagem": str(e)}), 500
