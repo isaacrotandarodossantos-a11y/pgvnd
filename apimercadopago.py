@@ -60,7 +60,7 @@ def gerar_cartao_pagamento():
         "items": [{
             "title": "Inscrição São Jorge Para Todos",
             "quantity": 1,
-            "unit_price": 50.00,
+            "unit_price": 5.00,
             "currency_id": "BRL"
         }],
         "payer": {
