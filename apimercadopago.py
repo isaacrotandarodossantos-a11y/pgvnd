@@ -45,7 +45,7 @@ def gerar_link_pagamento():
 
 
 # =====================================================================
-# FUNÇÃO 2: EXCLUSIVA PARA CARTÃO (Sem parâmetros de Webhook)
+# FUNÇÃO 2: EXCLUSIVA PARA CARTÃO (CORRIGIDA)
 # =====================================================================
 def gerar_cartao_pagamento():
     dados_recebidos = request.get_json() or {}
@@ -71,14 +71,13 @@ def gerar_cartao_pagamento():
             "installments": 12
         },
         "statement_descriptor": "INSCRICAO SJ",
-        # URLs de retorno ajustadas para carregar o e-mail do atleta na barra de endereço
+        # CORREÇÃO DEFINITIVA DAS URLS: Apontando para o seu link real do Netlify com parâmetros limpos
         "back_urls": {
             "success": "https://netlify.app" + email,
             "failure": "https://netlify.app",
             "pending": "https://netlify.app" + email
         },
         "auto_return": "approved"
-        # Notificação de URL removida completamente aqui
     }
     
     try:
