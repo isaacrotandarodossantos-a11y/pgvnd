@@ -73,9 +73,9 @@ def gerar_cartao_pagamento():
         "statement_descriptor": "INSCRICAO SJ",
         # CORREÇÃO DEFINITIVA DAS URLS: Apontando para o seu link real do Netlify com parâmetros limpos
         "back_urls": {
-            "success": "https://netlify.app" + email,
+            "success": "https://netlify.app",
             "failure": "https://netlify.app",
-            "pending": "https://netlify.app" + email
+            "pending": "https://netlify.app"
         },
         "auto_return": "approved"
     }
