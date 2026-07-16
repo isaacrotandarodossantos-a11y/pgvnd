@@ -18,7 +18,7 @@ def gerar_link_pagamento():
     # FLUXO 1: SE O USUÁRIO ESCOLHER PIX
     if metodo == "pix":
         payment_data = {
-            "transaction_amount": 0.0q,
+            "transaction_amount": 0.01,
             "description": "Inscrição São Jorge Para Todos",
             "payment_method_id": "pix",
             "payer": {
