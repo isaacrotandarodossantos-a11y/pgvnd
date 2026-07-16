@@ -11,9 +11,9 @@ CORS(app)
 TOKEN_MP = "APP_USR-8677986015174769-071410-f913279c1c5f01176f80d34cac8c035b-722783171"
 sdk = mercadopago.SDK(TOKEN_MP)
 
-# CREDENCIAIS PROTEGIDAS: Ninguém na internet consegue ver essas duas linhas!
+# CONFIGURAÇÃO CORRETA DA CHAVE
 CHAVE_SEGREDO = "9921"
-GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbw0PtbqTkA0Q7KIP1lnPX5BtMVmRW0q0m64ser2hJaxVBgaqI_zgirBr8OFBlb4nq58/exec"
+GOOGLE_SHEET_URL = "https://google.com"
 
 @app.route("/")
 def homepage():
@@ -24,14 +24,15 @@ def homepage():
 def api_gerar_link():
     dados = request.get_json() or {}
     
-    # Injeta a segurança direto no servidor antes de mandar pro Google
     dados["acao"] = "salvar_cadastro"
     dados["token_seguranca"] = CHAVE_SEGREDO
     
     try:
-        requests.post(GOOGLE_SHEET_URL, json=dados, timeout=10)
+        # allow_redirects=True resolve o problema de doGet do Google Script
+        res = requests.post(GOOGLE_SHEET_URL, json=dados, timeout=15, allow_redirects=True)
+        print(f"[LOG CADASTRO PIX]: Resposta do Google -> {res.text}")
     except Exception as e:
-        print(f"Erro ao salvar na planilha: {e}")
+        print(f"[ERRO CADASTRO PIX]: Falha ao conectar no Google -> {e}")
         
     return gerar_link_pagamento()
 
@@ -40,29 +41,29 @@ def api_gerar_link():
 def api_gerar_cartao():
     dados = request.get_json() or {}
     
-    # Injeta a segurança direto no servidor antes de mandar pro Google
     dados["acao"] = "salvar_cadastro"
     dados["token_seguranca"] = CHAVE_SEGREDO
     
     try:
-        requests.post(GOOGLE_SHEET_URL, json=dados, timeout=10)
+        res = requests.post(GOOGLE_SHEET_URL, json=dados, timeout=15, allow_redirects=True)
+        print(f"[LOG CADASTRO CARTAO]: Resposta do Google -> {res.text}")
     except Exception as e:
-        print(f"Erro ao salvar na planilha: {e}")
+        print(f"[ERRO CADASTRO CARTAO]: Falha ao conectar no Google -> {e}")
         
     return gerar_cartao_pagamento()
 
 # ROTA 3: CONSULTA PAGAMENTO PIX + ATUALIZA PLANILHA PARA PAGO
 @app.route("/verificar-pagamento/<int:payment_id>", methods=["GET"])
 def verificar_pagamento(payment_id):
-    # Captura o e-mail passado via parâmetro na URL para saber quem atualizar
     email_pagador = request.args.get("email")
+    print(f"[CHECANDO PIX]: Solicitando dados do ID {payment_id} para o email: {email_pagador}")
     
     try:
         payment_info = sdk.payment().get(payment_id)
         if payment_info and "response" in payment_info:
             status = payment_info["response"].get("status")
+            print(f"[STATUS PIX MP]: ID {payment_id} está {status}")
             
-            # Se o Pix foi pago, o próprio Render avisa o Google de forma blindada
             if status == "approved" and email_pagador:
                 dados_atualizacao = {
                     "acao": "confirmar_pagamento",
@@ -71,9 +72,10 @@ def verificar_pagamento(payment_id):
                     "payment_id": str(payment_id)
                 }
                 try:
-                    requests.post(GOOGLE_SHEET_URL, json=dados_atualizacao, timeout=10)
+                    res = requests.post(GOOGLE_SHEET_URL, json=dados_atualizacao, timeout=15, allow_redirects=True)
+                    print(f"[LOG BAIXA PIX]: Resposta do Google -> {res.text}")
                 except Exception as sheet_err:
-                    print(f"Erro ao atualizar status na planilha: {sheet_err}")
+                    print(f"[ERRO BAIXA PIX]: Falha ao mandar status pro Google -> {sheet_err}")
                     
             return jsonify({"status": status})
         return jsonify({"status": "error"}), 400
@@ -87,6 +89,8 @@ def confirmar_cartao():
     email_pagador = dados.get("email")
     id_pagamento = dados.get("payment_id")
     
+    print(f"[PEDIDO CARTAO]: Recebido retorno do cartão para o email: {email_pagador}")
+    
     if email_pagador:
         dados_atualizacao = {
             "acao": "confirmar_pagamento",
@@ -95,9 +99,11 @@ def confirmar_cartao():
             "payment_id": id_pagamento or "cartao_credito"
         }
         try:
-            requests.post(GOOGLE_SHEET_URL, json=dados_atualizacao, timeout=10)
+            res = requests.post(GOOGLE_SHEET_URL, json=dados_atualizacao, timeout=15, allow_redirects=True)
+            print(f"[LOG BAIXA CARTAO]: Resposta do Google -> {res.text}")
             return jsonify({"status": "sucesso"}), 200
         except Exception as e:
+            print(f"[ERRO BAIXA CARTAO]: Falha ao mandar status pro Google -> {e}")
             return jsonify({"status": "erro", "mensagem": str(e)}), 500
     return jsonify({"status": "dados_invalidos"}), 400
 
