@@ -8,7 +8,7 @@ from apimercadopago import gerar_link_pagamento, gerar_cartao_pagamento
 app = Flask(__name__, template_folder='.')
 CORS(app)
 
-TOKEN_MP = "APP_USR-8677986015174769-071410-f913279c1c5f01176f80d34cac8c035b-722783171"
+TOKEN_MP = "TEST-8677986015174769-071410-62092e2af1b3457c19aa12ee873e701c-722783171"
 sdk = mercadopago.SDK(TOKEN_MP)
 
 # CONFIGURAÇÃO CORRETA DA CHAVE
