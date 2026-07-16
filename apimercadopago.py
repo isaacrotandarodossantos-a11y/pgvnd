@@ -1,10 +1,31 @@
 import mercadopago
 import uuid
-from flask import request, jsonify
+import requests
+from flask import Flask, request, jsonify
+from flask_cors import CORS # Lembre-se de ativar o CORS no Flask
+
+app = Flask(__name__)
+CORS(app) # Permite que seu HTML acesse o Flask sem bloqueios
+
+URL_GOOGLE_SCRIPT = "https://google.com"
+
+def comunicar_google_sheets(acao, dados_atleta):
+    """Envia os dados direto do Python para o Google Sheets via POST"""
+    payload = {
+        "token_seguranca": "9921",
+        "acao": acao,
+        **dados_atleta
+    }
+    try:
+        # Requisições de servidor para servidor via POST não sofrem bloqueio de CORS
+        requests.post(URL_GOOGLE_SCRIPT, json=payload, timeout=10)
+    except Exception as e:
+        print(f"Erro ao integrar com Google Sheets: {e}")
 
 # =====================================================================
-# FUNÇÃO 1: EXCLUSIVA PARA GERAR PIX
+# ROTA 1: GERAR PIX (E CRIAR COMO PENDENTE)
 # =====================================================================
+@app.route("/gerar-link-pagamento", methods=["POST"])
 def gerar_link_pagamento():
     dados_recebidos = request.get_json() or {}
     email = dados_recebidos.get("email", "participante@email.com")
@@ -31,6 +52,9 @@ def gerar_link_pagamento():
         response = result.get("response")
         
         if response and "id" in response:
+            # 🚀 SALVA COMO PENDENTE ASSIM QUE O PIX FOR GERADO
+            comunicar_google_sheets("criar_pendente", dados_recebidos)
+            
             point_of_interaction = response.get("point_of_interaction", {})
             transaction_data = point_of_interaction.get("transaction_data", {})
             
@@ -43,10 +67,10 @@ def gerar_link_pagamento():
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
 
-
 # =====================================================================
-# FUNÇÃO 2: EXCLUSIVA PARA CARTÃO (MUDANÇA REVISADA)
+# ROTA 2: GERAR CARTÃO (E CRIAR COMO PENDENTE)
 # =====================================================================
+@app.route("/gerar-cartao-pagamento", methods=["POST"])
 def gerar_cartao_pagamento():
     dados_recebidos = request.get_json() or {}
     email = dados_recebidos.get("email", "participante@email.com")
@@ -71,12 +95,11 @@ def gerar_cartao_pagamento():
             "installments": 12
         },
         "statement_descriptor": "INSCRICAO SJ",
-        # O binary_mode: True remove o status 'pending' (fica apenas approved ou rejected)
         "binary_mode": True, 
         "back_urls": {
-            "success": "hhttps://bucolic-fox-ea9bba.netlify.app/",
-            "failure": "https://celebrated-kleicha-6666ee.netlify.app/",
-            "pending": "https://celebrated-kleicha-6666ee.netlify.app/"
+            "success": "https://netlify.app", # Corrigido o hhttps://
+            "failure": "https://netlify.app",
+            "pending": "https://netlify.app"
         },
         "auto_return": "approved",
         "external_reference": email
@@ -87,9 +110,25 @@ def gerar_cartao_pagamento():
         response = result.get("response")
         
         if response and "init_point" in response:
+            # 🚀 SALVA COMO PENDENTE ASSIM QUE O LINK DO CARTÃO FOR GERADO
+            comunicar_google_sheets("criar_pendente", dados_recebidos)
+            
             return jsonify({
                 "link_cartao": response.get("init_point") 
             }), 200
         return jsonify({"erro": "Erro ao criar link do cartão"}), 400
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
+
+# =====================================================================
+# ROTA 3: CONFIRMAÇÃO MANUAL (Acionada pelo botão do front-end)
+# =====================================================================
+@app.route("/confirmar-pagamento-manual", methods=["POST"])
+def confirmar_manual():
+    dados_recebidos = request.get_json() or {}
+    # Avisa o Google Sheets para mudar o status do email para "Pago"
+    comunicar_google_sheets("confirmar_pagamento", {"email": dados_recebidos.get("email")})
+    return jsonify({"status": "solicitado"}), 200
+
+if __name__ == "__main__":
+    app.run(port=5000, debug=True)
