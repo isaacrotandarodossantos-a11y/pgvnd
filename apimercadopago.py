@@ -1,10 +1,7 @@
 import mercadopago
 import uuid
-from flask import Flask, request, jsonify
+from flask import request, jsonify
 
-app = Flask(__name__)
-
-@app.route('/gerar-link-pagamento', methods=['POST'])
 def gerar_link_pagamento():
     dados_recebidos = request.get_json()
     
@@ -76,6 +73,7 @@ def gerar_link_pagamento():
             result = sdk.preference().create(preference_data, request_options)
             response = result.get("response")
             
+            # CORREÇÃO AQUI: Linha corrigida para validar os códigos HTTP de sucesso 200 e 201
             if result.get("status") in [200, 201] and response:
                 return jsonify({
                     "id": "cartao_checkout", 
