@@ -5,7 +5,7 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 @app.route('/gerar-link-pagamento', methods=['POST'])
-def rota_pagamento():
+def gerar_link_pagamento():
     dados_recebidos = request.get_json()
     
     nome = dados_recebidos.get("nome", "Participante")
