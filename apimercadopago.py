@@ -71,9 +71,10 @@ def gerar_cartao_pagamento():
             "installments": 12
         },
         "statement_descriptor": "INSCRICAO SJ",
-        # Links de retorno limpos, apontando estritamente para a raiz do seu site
-       "back_urls": {
-            "success": "https://SEU-SITE.netlify.app/checkout.html", # Remova o parâmetro aqui
+        # O binary_mode: True remove o status 'pending' (fica apenas approved ou rejected)
+        "binary_mode": True, 
+        "back_urls": {
+            "success": "https://SEU-SITE.netlify.app/checkout.html",
             "failure": "https://SEU-SITE.netlify.app/checkout.html",
             "pending": "https://SEU-SITE.netlify.app/checkout.html"
         },
