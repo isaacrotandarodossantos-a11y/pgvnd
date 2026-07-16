@@ -57,6 +57,20 @@
         .info { margin-top:22px; display:flex; flex-direction:column; gap:12px; }
         .info div { display:flex; gap:12px; align-items:center; font-size:15px; color:var(--muted); }
         .info i { color:var(--green); }
+		.pagamento-card.selected{
+			border:2px solid #6D28D9;
+			background:#F5F3FF;
+			box-shadow:0 0 0 4px rgba(109,40,217,.15);
+		}
+
+		.pagamento-card{
+			transition:.25s;
+		}
+		.radio-card:has(input:checked){
+			border:2px solid #6D28D9;
+			background:#F5F3FF;
+			box-shadow:0 0 0 4px rgba(109,40,217,.15);
+		}
         @media(max-width:980px){ .checkout { grid-template-columns:1fr; } .summary { position:relative; top:0; } .grid-2 { grid-template-columns:1fr; } .radio-grid { grid-template-columns:1fr; } }
     </style>
 </head>
@@ -111,6 +125,17 @@
                         <div class="form-group"><label>Telefone</label><input type="tel" name="emergencia_tel" placeholder="(00) 00000-0000" required></div>
                     </div>
                 </div>
+			<label class="radio-card pagamento-card">
+			<input type="radio" name="metodo_pagamento" value="pix" checked>
+			<strong><i class="fa-solid fa-qrcode"></i> PIX</strong>
+			<span>Pagamento instantâneo</span>
+		</label>
+
+		<label class="radio-card pagamento-card">
+			<input type="radio" name="metodo_pagamento" value="cartao">
+			<strong><i class="fa-regular fa-credit-card"></i> Cartão de Crédito</strong>
+			<span>Até 12x sem juros</span>
+		</label>	
                 <div style="display:flex; align-items:flex-start; gap:12px; margin-top:30px;">
                     <input type="checkbox" required style="width:20px; height:20px; margin-top:3px;">
                     <span style="color:#6B7280; line-height:1.7; font-size:14px;">Declaro que li e concordo com o regulamento do evento, autorizo o uso da minha imagem e confirmo que estou apto para participar da prova.</span>
@@ -128,105 +153,32 @@
                 <div class="info">
                     <div><i class="fa-solid fa-lock"></i> Ambiente protegido por criptografia SSL</div>
                     <div><i class="fa-solid fa-shield-halved"></i> Dados armazenados com segurança</div>
-                    <div><i class="fa-solid fa-credit-card"></i> Pagamento processado pelo GGCheckout</div>
+                    <div><i class="fa-solid fa-credit-card"></i> PIX e Cartão com pagamento seguro</div>
                 </div>
             </div>
         </div>
     </form>
+	<!-- ÁREA DO PIX TRANSPARENTE -->
+		<div id="area-pix" style="display: none; text-align: center; max-width: 500px; margin: 20px auto; padding: 20px; font-family: Arial, sans-serif; border: 1px solid #ddd; background: #fff;">
+			<h3 style="color: #2b9348;">Inscrição Pré-Reservada! 🏃‍♂️</h3>
+			<p>Escaneie o QR Code abaixo ou utilize o Copia e Cola para pagar:</p>
+			
+			<!-- Imagem onde o JavaScript vai injetar o QR Code gerado pelo Render -->
+			<img id="imagem-qrcode" src="" alt="QR Code Pix" style="max-width: 250px; margin: 15px auto; display: block; border: 1px solid #ddd; padding: 10px; background: white;">
+			
+			<label for="texto-copia-cola" style="display:block; font-weight: bold; margin-bottom: 5px;">Código Pix Copia e Cola:</label>
+			<input type="text" id="texto-copia-cola" readonly style="width: 100%; padding: 10px; text-align: center; font-size: 14px; margin-bottom: 10px; box-sizing: border-box;" onclick="this.select(); document.execCommand('copy'); alert('Código copiado!');">
+			
+			<p style="color: #666; font-size: 14px; margin-top: 15px;">
+				Aguardando confirmação do pagamento... <br>
+				Você será **redirecionado automaticamente** assim que o banco aprovar.
+			</p>
+		</div>
+
 </div>
-<script>
-    // URL CRÍTICA: Substitua o endereço abaixo pela URL real do seu servidor no Render
-    const URL_SERVIDOR = "https://onrender.com"; 
 
-    const form = document.getElementById("checkoutForm");
-    const btn = document.getElementById("btnFinalizar");
+<!-- O DEFER é crucial para não dar conflito com o carregamento -->
+<script src="checkout.js"></script>
 
-    // 1. Atualização do resumo visual
-    form.addEventListener("input", () => {
-        const formData = new FormData(form);
-        document.getElementById("resumoModalidade").innerText = formData.get("modalidade") || "Corrida & Caminhada";
-        document.getElementById("resumoTamanho").innerText = formData.get("tamanho") || "M";
-    });
-
-    // 2. Máscaras
-    function aplicarMascara(e) {
-        let valor = e.target.value.replace(/\D/g, "");
-        const nome = e.target.name;
-        if (nome === "cpf") {
-            valor = valor.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-        } else if (nome === "telefone" || nome === "emergencia_tel") {
-            valor = valor.replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d{5})(\d{4})$/, "$1-$2");
-        }
-        e.target.value = valor.substring(0, nome === "cpf" ? 14 : 15);
-    }
-    document.querySelectorAll('input[name="cpf"], input[name="telefone"], input[name="emergencia_tel"]').forEach(input => {
-        input.addEventListener("input", aplicarMascara);
-    });
-
-    // 3. Submissão Corrigida para Pix Transparente
-    form.addEventListener("submit", function(e) {
-        e.preventDefault();
-        
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> GERANDO PIX...';
-
-        const formData = new FormData(form);
-        const dadosForm = Object.fromEntries(formData.entries());
-
-        if (dadosForm.cpf) {
-            dadosForm.cpf = dadosForm.cpf.replace(/\D/g, "");
-        }
-
-        // Conecta com a rota de Pix Transparente do seu Render
-        fetch(`${URL_SERVIDOR}/gerar-link-pagamento`, { 
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(dadosForm)
-        })
-        .then(response => response.json())
-        .then(dadosPix => {
-            // Verifica se a API retornou o ID do Pix em vez de um link comum
-            if (dadosPix && dadosPix.id) {
-                
-                // Oculta o formulário original para dar espaço ao Pix
-                form.style.display = "none";
-                
-                // Torna visível o bloco onde o QR Code e o Copia e Cola vão aparecer
-                document.getElementById("area-pix").style.display = "block"; 
-                document.getElementById("imagem-qrcode").src = `data:image/jpeg;base64,${dadosPix.qr_code_base64}`;
-                document.getElementById("texto-copia-cola").value = dadosPix.copia_e_cola;
-
-                // ATIVA O SENSOR: Pergunta ao servidor a cada 3 segundos se o Pix foi pago
-                const idPagamento = dadosPix.id;
-                const intervalo = setInterval(async () => {
-                    try {
-                        const checar = await fetch(`${URL_SERVIDOR}/verificar-pagamento/${idPagamento}`);
-                        const resultado = await checar.json();
-
-                        if (resultado.status === "approved") {
-                            clearInterval(intervalo); // Desliga o sensor de checagem
-                            
-                            // MANDA O CLIENTE SOZINHO PARA O AGRADECIMENTO NO NETLIFY!
-                            window.location.href = "https://netlify.app";
-                        }
-                    } catch (erroSensor) {
-                        console.log("Aguardando confirmação do banco...", erroSensor);
-                    }
-                }, 3000); // Executa a verificação a cada 3 segundos
-
-            } else {
-                alert("Erro ao gerar Pix de pagamento. Tente novamente.");
-                btn.disabled = false;
-                btn.innerHTML = "FINALIZAR INSCRIÇÃO";
-            }
-        })
-        .catch(err => {
-            console.error("Erro completo:", err);
-            alert("Erro de conexão com o servidor de pagamento.");
-            btn.disabled = false;
-            btn.innerHTML = "FINALIZAR INSCRIÇÃO";
-        });
-    });
-</script>
 </body>
 </html>
