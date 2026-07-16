@@ -13,7 +13,7 @@ sdk = mercadopago.SDK(TOKEN_MP)
 
 # CONFIGURAÇÃO CORRETA DA CHAVE
 CHAVE_SEGREDO = "9921"
-GOOGLE_SHEET_URL = "https://google.com"
+GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbw0PtbqTkA0Q7KIP1lnPX5BtMVmRW0q0m64ser2hJaxVBgaqI_zgirBr8OFBlb4nq58/exec"
 
 @app.route("/")
 def homepage():
