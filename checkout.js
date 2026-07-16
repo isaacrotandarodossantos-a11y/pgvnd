@@ -6,7 +6,7 @@ function enviarParaGoogle(dados) {
     return new Promise((resolve) => {
         const callbackName = "googleCallback_" + Date.now();
         window[callbackName] = function(resposta) {
-            delete window[callbackName];
+            delete window[window[callbackName]];
             document.getElementById(callbackName)?.remove();
             resolve(resposta);
         };
@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
             localStorage.setItem("email_atleta_reserva", dados.email);
 
             try {
-                // [PASSO 1 NOVO] Salva os dados na planilha como "Pendente" imediatamente
+                // [PASSO 1] Salva os dados na planilha como "Pendente" imediatamente
                 await enviarParaGoogle({
                     token_seguranca: "9921",
                     acao: "criar_pendente",
@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     emergencia: dados.emergencia
                 });
 
-                // 2. Gera o pagamento na API do Render
+                // [PASSO 2] Gera o pagamento na API do Render
                 const rota = dados.metodo_pagamento === "cartao" ? "/gerar-cartao-pagamento" : "/gerar-link-pagamento";
                 const res = await fetch(URL_SERVIDOR + rota, {
                     method: "POST",
@@ -56,8 +56,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 const data = await res.json();
 
                 if (dados.metodo_pagamento === "cartao" && data.link_cartao) {
+                    // Cartão vai direto para o checkout do Mercado Pago
                     window.location.href = data.link_cartao;
                 } else if (data.qr_code_base64) {
+                    // Esconde o formulário e exibe o QR Code do Pix na tela
                     document.querySelector('.checkout').style.display = 'none';
                     const areaPix = document.getElementById('area-pix');
                     areaPix.style.display = 'block';
@@ -65,33 +67,42 @@ document.addEventListener("DOMContentLoaded", () => {
                     document.getElementById('imagem-qrcode').src = `data:image/png;base64,${data.qr_code_base64}`;
                     document.getElementById('texto-copia-cola').value = data.copia_e_cola;
 
-                    // Criar botão de Confirmação Manual e WhatsApp
-                    const areaBotoes = document.createElement("div");
-                    areaBotoes.innerHTML = `
-                        <button id="btnConfirmarManual" style="margin-top:20px; padding:15px; width:100%; background:#007bff; color:white; border:none; border-radius:5px;">
-                            CONFIRMAR PAGAMENTO E CHAMAR NO WHATSAPP
-                        </button>
+                    // Adiciona uma mensagem visual para avisar o atleta que a tela mudará sozinha
+                    const avisoVisual = document.createElement("div");
+                    avisoVisual.innerHTML = `
+                        <p style="margin-top:20px; text-align:center; font-weight:bold; color:#28a745; animation: blink 1.5s infinite;">
+                            🔄 Aguardando pagamento... A página atualizará automaticamente!
+                        </p>
                     `;
-                    areaPix.appendChild(areaBotoes);
+                    areaPix.appendChild(avisoVisual);
 
-                    document.getElementById("btnConfirmarManual").addEventListener("click", async () => {
-                        const btnManual = document.getElementById("btnConfirmarManual");
-                        btnManual.innerText = "CONFIRMANDO...";
-                        
-                        // [PASSO 3 CORRIGIDO] Atualiza para "Pago" via JSONP para evitar CORS
-                        await enviarParaGoogle({
-                            token_seguranca: "9921",
-                            acao: "confirmar_pagamento",
-                            email: dados.email
-                        });
+                    // 🚀 SISTEMA DE REDIRECIONAMENTO AUTOMÁTICO ULTRAVELOZ (SEM PRECISAR CLICAR)
+                    const pagamentoId = data.id; // ID retornado pelo Mercado Pago
+                    const emailAtleta = dados.email;
 
-                        // Abre o WhatsApp
-                        const msg = `Olá! Acabei de realizar o pagamento PIX da minha inscrição. Nome: ${dados.nome}`;
-                        window.open(`https://wa.me/5582999999999?text=${encodeURIComponent(msg)}`, '_blank');
-                        
-                        alert("Confirmação enviada! Você será redirecionado.");
-                        window.location.href = "https://seu-site-final.netlify.app";
-                    });
+                    const checarStatusPix = setInterval(async () => {
+                        try {
+                            // Consulta a rota /verificar-pagamento que já está no seu main.py
+                            const resposta = await fetch(`${URL_SERVIDOR}/verificar-pagamento/${pagamentoId}?email=${encodeURIComponent(emailAtleta)}`);
+                            const resultado = await resposta.json();
+
+                            console.log("Checando Pix... Status retornado:", resultado.status);
+
+                            // Assim que o Mercado Pago retornar 'approved', joga para o Netlify na hora
+                            if (resultado.status === "approved") {
+                                clearInterval(checarStatusPix); // Interrompe o loop imediatamente
+                                
+                                // Abre o WhatsApp em segundo plano antes de sair da página
+                                const msg = `Olá! Realizei o pagamento PIX e minha inscrição já foi confirmada. Nome: ${dados.nome}`;
+                                window.open(`https://wa.me/5582999999999?text=${encodeURIComponent(msg)}`, '_blank');
+                                
+                                // Redireciona de forma instantânea para a página de agradecimento (com https:// correto)
+                                window.location.href = "https://cheery-fox-9fdceb.netlify.app/"; 
+                            }
+                        } catch (erro) {
+                            console.error("Erro ao verificar status do Pix:", erro);
+                        }
+                    }, 500); // 🚀 500ms = Executa duas vezes por segundo para garantir atraso ZERO
 
                 } else {
                     throw new Error("Resposta inválida do servidor");
